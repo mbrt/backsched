@@ -17,13 +17,15 @@ const (
 	logVerbose = iota
 	logNormal
 
-	defaultConfFile = "~/.backsched/config.yaml"
+	defaultConfFile  = "~/.backsched/config.yaml"
+	defaultStateFile = "~/.backsched/state.yaml"
 )
 
 type cmdlineOpts struct {
-	command  commandType
-	logs     logLevel
-	confPath string
+	command   commandType
+	logs      logLevel
+	confPath  string
+	statePath string
 }
 
 func parseArgs() cmdlineOpts {
@@ -38,12 +40,13 @@ Options:
   --verbose               Verbose output.
   --config=<conf-file>    Use the specified config file.`
 
-	args, _ := docopt.Parse(usage, nil, true, "Backup Scheduler 0.1", true)
+	args, _ := docopt.Parse(usage, nil, true, "Backup Scheduler 0.1", false)
 
 	result := cmdlineOpts{
 		cmdDoBackup,
 		logNormal,
 		defaultConfFile,
+		defaultStateFile,
 	}
 
 	if args["need-backup"] != nil {
@@ -74,7 +77,11 @@ func handleCommand(opts cmdlineOpts) error {
 		return err
 	}
 	Debugf("config file:\n%v", conf.String())
-	return nil
+	switch opts.command {
+	case cmdNeedBackup:
+		return NeedBackup(*conf, opts.statePath)
+	}
+	panic("command not found??")
 }
 
 func main() {

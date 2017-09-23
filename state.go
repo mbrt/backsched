@@ -63,3 +63,12 @@ func (s State) Save(path string) (err error) {
 	}
 	return err
 }
+
+func (s State) LastBackupOf(name string) (time.Time, bool) {
+	for _, b := range s.Backups {
+		if b.Name == name {
+			return b.LastBackup, true
+		}
+	}
+	return time.Time{}, false
+}
