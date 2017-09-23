@@ -1,0 +1,20 @@
+version: v1
+backups:
+  - name: "micheleb"
+    everyDays: 7
+    src: "~"
+    srcDirs:
+      - "Calibre Library"
+      - "Documents"
+      - "Music"
+      - "Pictures"
+      - "VirtualBox VMs"
+      - "Videos/Miei"
+    rsync:
+      args: ["-av", "--delete"]
+      dest: "/run/media/micheleb/verbatim-bkp/backup/rsync/"
+    restic:
+      dest: ""
+      check: true
+      cleanup:
+        keepLast: 5

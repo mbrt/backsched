@@ -3,6 +3,7 @@
 *.dll
 *.so
 *.dylib
+backsched
 
 # Test binary, build with `go test -c`
 *.test
