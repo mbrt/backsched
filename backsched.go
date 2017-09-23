@@ -73,7 +73,7 @@ func handleCommand(opts cmdlineOpts) error {
 	if err != nil {
 		return err
 	}
-	Debugf("config: %v\n", conf.String())
+	Debugf("config file:\n%v", conf.String())
 	return nil
 }
 

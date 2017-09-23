@@ -11,8 +11,8 @@ import (
 
 // Config contains the parsed config file
 type Config struct {
-	Version string       `yaml:"version"`
-	Backups []BackupConf `yaml:"backups"`
+	Version string
+	Backups []BackupConf
 }
 
 func (c Config) String() string {
@@ -25,25 +25,25 @@ func (c Config) String() string {
 
 // BackupConf contains the configuration of one backup
 type BackupConf struct {
-	Name      string      `yaml:"name"`
-	EveryDays int         `yaml:"everyDays"`
-	Src       string      `yaml:"src"`
-	SrcDirs   []string    `yaml:"srcDirs"`
-	Rsync     *RsyncConf  `yaml:"rsync"`
-	Restic    *ResticConf `yamlm:"restic"`
+	Name      string
+	EveryDays int
+	Src       string
+	SrcDirs   []string
+	Rsync     *RsyncConf
+	Restic    *ResticConf
 }
 
 // RsyncConf contains the rsync configuration for one backup
 type RsyncConf struct {
-	Dest string   `yaml:"dest"`
-	Args []string `yaml:"args"`
+	Dest string
+	Args []string
 }
 
 // ResticConf is the restic configuration for one backup
 type ResticConf struct {
-	Dest    string            `yaml:"dest"`
-	Check   bool              `yaml:"check"`
-	Cleanup ResticCleanupConf `yaml:"cleanup"`
+	Dest    string
+	Check   bool
+	Cleanup ResticCleanupConf
 }
 
 // ResticCleanupConf is the restic cleanup configuration for one backup.
