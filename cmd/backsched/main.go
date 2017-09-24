@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/docopt/docopt-go"
+	"github.com/mbrt/backsched/pkg/backsched"
 )
 
 type commandType int
@@ -38,7 +39,8 @@ Usage:
 Options:
   -h --help               Show this screen.
   --verbose               Verbose output.
-  --config=<conf-file>    Use the specified config file.`
+  --config=<conf-file>    Use the specified config file.
+  --state=<state-file>    Use the spefied state file.`
 
 	args, _ := docopt.Parse(usage, nil, true, "Backup Scheduler 0.1", false)
 
@@ -58,6 +60,9 @@ Options:
 	if conf, ok := args["--config"].(string); ok {
 		result.confPath = conf
 	}
+	if state, ok := args["--state"].(string); ok {
+		result.statePath = state
+	}
 
 	return result
 }
@@ -65,21 +70,21 @@ Options:
 func setupLogger(level logLevel) {
 	switch level {
 	case logVerbose:
-		enableDebug = true
+		backsched.EnableDebug()
 	case logNormal:
 		break
 	}
 }
 
 func handleCommand(opts cmdlineOpts) error {
-	conf, err := ParseConfig(opts.confPath)
+	conf, err := backsched.ParseConfig(opts.confPath)
 	if err != nil {
 		return err
 	}
-	Debugf("config file:\n%v", conf.String())
+	backsched.Debugf("config file:\n%v", conf.String())
 	switch opts.command {
 	case cmdNeedBackup:
-		return NeedBackup(*conf, opts.statePath)
+		return backsched.NeedBackup(*conf, opts.statePath)
 	}
 	panic("command not found??")
 }

@@ -11,8 +11,8 @@ backups:
       - "VirtualBox VMs"
       - "Videos/Miei"
     rsync:
-      args: ["-av", "--delete"]
       dest: "/run/media/micheleb/verbatim-bkp/backup/rsync/"
+      args: ["-av", "--delete"]
     restic:
       dest: ""
       check: true

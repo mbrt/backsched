@@ -1,4 +1,4 @@
-package main
+package backsched
 
 import (
 	"io/ioutil"

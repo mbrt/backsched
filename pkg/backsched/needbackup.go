@@ -1,10 +1,11 @@
-package main
+package backsched
 
 import (
 	"fmt"
 	"time"
 )
 
+// NeedBackup prints to console the outdated backups.
 func NeedBackup(config Config, statePath string) error {
 	state, err := LoadState(statePath)
 	var outdated []OutdatedBackup
@@ -17,6 +18,7 @@ func NeedBackup(config Config, statePath string) error {
 	return nil
 }
 
+// ComputeOutdated returns the outdated backups info.
 func ComputeOutdated(config Config, state State) []OutdatedBackup {
 	res := []OutdatedBackup{}
 	now := time.Now()
@@ -34,6 +36,7 @@ func ComputeOutdated(config Config, state State) []OutdatedBackup {
 	return res
 }
 
+// OutdatedBackup contains info about an out-to-date backup.
 type OutdatedBackup struct {
 	Name      string
 	SinceDays int

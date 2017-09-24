@@ -1,4 +1,4 @@
-package main
+package backsched
 
 import (
 	"fmt"
@@ -48,7 +48,7 @@ type ResticConf struct {
 
 // ResticCleanupConf is the restic cleanup configuration for one backup.
 type ResticCleanupConf struct {
-	KeepLast int `yaml:"keepLast"`
+	KeepLast int
 }
 
 // ParseConfig parses the given config file path.

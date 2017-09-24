@@ -1,4 +1,4 @@
-package main
+package backsched
 
 import (
 	"io/ioutil"
@@ -31,9 +31,9 @@ func TestState(t *testing.T) {
 
 	// purify the timestamps from the crappy monotonic clock reading
 	// that would fail the comparison
-	for i, b := range state.Backups {
-		t := b.LastBackup.Round(0)
-		state.Backups[i].LastBackup = t
+	for i := range state.Backups {
+		b := &state.Backups[i]
+		b.LastBackup = b.LastBackup.Round(0)
 	}
 
 	assert.Equal(t, state, *s2)
