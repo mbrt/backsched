@@ -26,11 +26,11 @@ func (c Config) String() string {
 // BackupConf contains the configuration of one backup
 type BackupConf struct {
 	Name      string
-	EveryDays int
+	EveryDays int `yaml:"everyDays"`
 	Src       string
-	SrcDirs   []string
-	Rsync     *RsyncConf
-	Restic    *ResticConf
+	SrcDirs   []string    `yaml:"srcDirs"`
+	Rsync     *RsyncConf  `yaml:",omitempty"`
+	Restic    *ResticConf `yaml:",omitempty"`
 }
 
 // RsyncConf contains the rsync configuration for one backup
@@ -53,6 +53,11 @@ type ResticCleanupConf struct {
 
 // ParseConfig parses the given config file path.
 func ParseConfig(path string) (*Config, error) {
+	path, err := ExpandHome(path)
+	if err != nil {
+		return nil, err
+	}
+
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot open config file")

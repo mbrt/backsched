@@ -51,7 +51,7 @@ Options:
 		defaultStateFile,
 	}
 
-	if args["need-backup"] != nil {
+	if args["need-backup"].(bool) {
 		result.command = cmdNeedBackup
 	}
 	if args["--verbose"].(bool) {
@@ -85,6 +85,8 @@ func handleCommand(opts cmdlineOpts) error {
 	switch opts.command {
 	case cmdNeedBackup:
 		return backsched.NeedBackup(*conf, opts.statePath)
+	case cmdDoBackup:
+		return backsched.Backup(*conf)
 	}
 	panic("command not found??")
 }
