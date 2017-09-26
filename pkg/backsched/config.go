@@ -11,8 +11,9 @@ import (
 
 // Config contains the parsed config file
 type Config struct {
-	Version string
-	Backups []BackupConf
+	Version   string
+	StatePath string `yaml:"statePath"`
+	Backups   []BackupConf
 }
 
 func (c Config) String() string {
@@ -24,6 +25,7 @@ func (c Config) String() string {
 }
 
 func (c *Config) expandPaths() {
+	c.StatePath, _ = ExpandHome(c.StatePath)
 	for i := range c.Backups {
 		b := &c.Backups[i]
 		b.Src, _ = ExpandHome(b.Src)

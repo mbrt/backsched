@@ -12,11 +12,8 @@ func TestNeedBackup(t *testing.T) {
 	backup2Time := time.Now().AddDate(0, 0, -5)
 
 	state := State{
-		Version: "v1",
-		Backups: []BackupState{
-			BackupState{Name: "one", LastBackup: backup1Time},
-			BackupState{Name: "two", LastBackup: backup2Time},
-		},
+		"one": backup1Time,
+		"two": backup2Time,
 	}
 	conf := Config{
 		Version: "v2",

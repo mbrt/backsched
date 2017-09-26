@@ -11,10 +11,7 @@ import (
 
 func TestState(t *testing.T) {
 	state := State{
-		Version: "v1",
-		Backups: []BackupState{
-			BackupState{Name: "first", LastBackup: time.Now()},
-		},
+		"first": time.Now(),
 	}
 
 	// temp file for the serialized state
@@ -31,9 +28,8 @@ func TestState(t *testing.T) {
 
 	// purify the timestamps from the crappy monotonic clock reading
 	// that would fail the comparison
-	for i := range state.Backups {
-		b := &state.Backups[i]
-		b.LastBackup = b.LastBackup.Round(0)
+	for n, t := range state {
+		state[n] = t.Round(0)
 	}
 
 	assert.Equal(t, state, *s2)

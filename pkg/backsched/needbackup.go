@@ -6,14 +6,8 @@ import (
 )
 
 // NeedBackup prints to console the outdated backups.
-func NeedBackup(config Config, statePath string) error {
-	state, err := LoadState(statePath)
-	var outdated []OutdatedBackup
-	if err != nil {
-		outdated = ComputeOutdated(config, State{})
-	} else {
-		outdated = ComputeOutdated(config, *state)
-	}
+func NeedBackup(config Config, state State) error {
+	outdated := ComputeOutdated(config, state)
 	reportOutdated(outdated)
 	return nil
 }

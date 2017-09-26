@@ -5,12 +5,13 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"time"
 
 	"github.com/pkg/errors"
 )
 
 // Backup executes all the backups provided in the config, if possible
-func Backup(c Config) error {
+func Backup(c Config, s State) error {
 	backs, err := MakeBackuppers(c)
 	if err != nil {
 		return errors.Wrap(err, "error making backuppers from config")
@@ -27,6 +28,11 @@ func Backup(c Config) error {
 			continue
 		}
 		res = append(res, BackupResult{name, nil})
+		s[name] = time.Now()
+	}
+
+	if err = s.Save(c.StatePath); err != nil {
+		fmt.Fprintf(os.Stderr, "error saving state: %v\n", err)
 	}
 
 	// dump results
@@ -35,7 +41,7 @@ func Backup(c Config) error {
 		fmt.Printf("  - %v\n", r)
 	}
 
-	return nil
+	return err
 }
 
 // Backupper is able to perform a certain backup

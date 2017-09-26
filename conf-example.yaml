@@ -1,4 +1,5 @@
 version: v1
+statePath: "~/.backsched/state.yaml"
 backups:
   - name: "micheleb"
     everyDays: 7
