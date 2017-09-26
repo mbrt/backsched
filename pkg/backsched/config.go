@@ -23,6 +23,20 @@ func (c Config) String() string {
 	return string(r)
 }
 
+func (c *Config) expandPaths() {
+	for i := range c.Backups {
+		b := &c.Backups[i]
+		b.Src, _ = ExpandHome(b.Src)
+		// no need to expand the source dirs
+		if b.Rsync != nil {
+			b.Rsync.Dest, _ = ExpandHome(b.Rsync.Dest)
+		}
+		if b.Restic != nil {
+			b.Restic.Dest, _ = ExpandHome(b.Restic.Dest)
+		}
+	}
+}
+
 // BackupConf contains the configuration of one backup
 type BackupConf struct {
 	Name      string
@@ -74,5 +88,6 @@ func ParseConfig(path string) (*Config, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "invalid config file")
 	}
+	res.expandPaths()
 	return &res, nil
 }

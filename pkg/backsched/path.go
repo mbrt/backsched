@@ -12,7 +12,7 @@ func ExpandHome(p string) (string, error) {
 	if len(p) == 0 || p[0] != '~' {
 		return p, nil
 	}
-	if len(p) > 1 && p[2:] != "~/" {
+	if len(p) > 1 && p[:2] != "~/" {
 		return p, nil
 	}
 

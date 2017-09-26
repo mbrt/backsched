@@ -54,7 +54,7 @@ func reportOutdated(outdated []OutdatedBackup) {
 	if len(outdated) == 0 {
 		fmt.Println("Backups are up to date")
 	} else {
-		fmt.Printf("The following backups are outdated:\n\n")
+		fmt.Printf("The following backups are outdated:\n")
 		for _, b := range outdated {
 			fmt.Printf("  - %v\n", b)
 		}
