@@ -3,7 +3,6 @@ package backsched
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path"
 	"time"
 
@@ -16,14 +15,15 @@ func Backup(c Config, s State) error {
 	if err != nil {
 		return errors.Wrap(err, "error making backuppers from config")
 	}
+	exec := cmdExecutor{}
 	res := []BackupResult{}
 	for i, b := range backs {
 		name := c.Backups[i].Name
-		if !b.CanBackup() {
+		if !b.CanBackup(exec) {
 			res = append(res, BackupResult{name, errors.New("SKIPPED")})
 			continue
 		}
-		if err = b.Backup(); err != nil {
+		if err = b.Backup(exec); err != nil {
 			res = append(res, BackupResult{name, errors.Wrap(err, "FAILED")})
 			continue
 		}
@@ -36,7 +36,7 @@ func Backup(c Config, s State) error {
 	}
 
 	// dump results
-	fmt.Printf("--- RESULTS ---\n")
+	fmt.Printf("\n--- RESULTS ---\n")
 	for _, r := range res {
 		fmt.Printf("  - %v\n", r)
 	}
@@ -47,9 +47,9 @@ func Backup(c Config, s State) error {
 // Backupper is able to perform a certain backup
 type Backupper interface {
 	// Backup executes the backup
-	Backup() error
+	Backup(ex Executor) error
 	// CanBackup returns true if the backup destination is available
-	CanBackup() bool
+	CanBackup(ex Executor) bool
 }
 
 // MakeBackuppers creates a list of backuppers from a config.
@@ -82,7 +82,7 @@ type rsyncBackup struct {
 	rconf   RsyncConf
 }
 
-func (r rsyncBackup) Backup() error {
+func (r rsyncBackup) Backup(ex Executor) error {
 	srcRoot, err := ExpandHome(r.src)
 	if err != nil {
 		return err
@@ -101,15 +101,14 @@ func (r rsyncBackup) Backup() error {
 		args := []string{}
 		args = append(args, r.rconf.Args...)
 		args = append(args, spath, dpath)
-		sp := exec.Command("rsync", args...)
-		if err := sp.Run(); err != nil {
-			return errors.Wrap(err, fmt.Sprintf("errors executing backup %v", dpath))
+		if err := ex.Exec("rsync", args...); err != nil {
+			return errors.Wrap("rsync failed")
 		}
 	}
 	return nil
 }
 
-func (r rsyncBackup) CanBackup() bool {
+func (r rsyncBackup) CanBackup(ex Executor) bool {
 	return dirExists(r.src) && dirExists(r.rconf.Dest)
 }
 
