@@ -2,14 +2,19 @@ package backsched
 
 import (
 	"fmt"
+	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 // NeedBackup prints to console the outdated backups.
-func NeedBackup(config Config, state State) error {
+func NeedBackup(config Config, state State, wmNotify bool) error {
 	outdated := ComputeOutdated(config, state)
-	reportOutdated(outdated)
-	return nil
+	if wmNotify {
+		return reportOutdated(outdated, notifySend{cmdExecutor{}, "backsched"})
+	}
+	return reportOutdated(outdated, nil)
 }
 
 // ComputeOutdated returns the outdated backups info.
@@ -37,6 +42,24 @@ type OutdatedBackup struct {
 	Never     bool
 }
 
+// Notifier notifies the user with a message
+type Notifier interface {
+	Notify(summary, msg string) error
+}
+
+type notifySend struct {
+	exec  Executor
+	title string
+}
+
+func (n notifySend) Notify(summary, msg string) error {
+	args := []string{"--urgency=normal", fmt.Sprintf("--app-name=%s", n.title), summary, msg}
+	if err := n.exec.Exec("notify-send", args...); err != nil {
+		return errors.Wrap(err, "failed notification")
+	}
+	return nil
+}
+
 func (b OutdatedBackup) String() string {
 	if b.Never {
 		return fmt.Sprintf("%s: never done", b.Name)
@@ -44,13 +67,23 @@ func (b OutdatedBackup) String() string {
 	return fmt.Sprintf("%s: last backup was %d days ago", b.Name, b.SinceDays)
 }
 
-func reportOutdated(outdated []OutdatedBackup) {
+func reportOutdated(outdated []OutdatedBackup, notifier Notifier) error {
 	if len(outdated) == 0 {
 		fmt.Println("Backups are up to date")
+		// don't annoy the user if everything is fine
 	} else {
-		fmt.Printf("The following backups are outdated:\n")
-		for _, b := range outdated {
-			fmt.Printf("  - %v\n", b)
+		summary := "The following backups are outdated:"
+		msgs := make([]string, len(outdated)+1)
+		for i, b := range outdated {
+			msgs[i] = fmt.Sprintf("  - %v", b)
+		}
+		msg := strings.Join(msgs, "\n")
+
+		fmt.Println(summary)
+		fmt.Println(msg)
+		if notifier != nil {
+			return notifier.Notify(summary, msg)
 		}
 	}
+	return nil
 }

@@ -102,7 +102,7 @@ func (r rsyncBackup) Backup(ex Executor) error {
 		args = append(args, r.rconf.Args...)
 		args = append(args, spath, dpath)
 		if err := ex.Exec("rsync", args...); err != nil {
-			return errors.Wrap("rsync failed")
+			return errors.Wrap(err, "rsync failed")
 		}
 	}
 	return nil

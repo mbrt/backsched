@@ -22,22 +22,24 @@ const (
 )
 
 type cmdlineOpts struct {
-	command  commandType
-	logs     logLevel
-	confPath string
+	command    commandType
+	logs       logLevel
+	confPath   string
+	notifySend bool
 }
 
 func parseArgs() cmdlineOpts {
 	usage := `backsched.
 
 Usage:
-  backsched need-backup [options]
+  backsched need-backup [options] [-n]
   backsched backup [options]
 
 Options:
   -h --help               Show this screen.
   --verbose               Verbose output.
-  --config=<conf-file>    Use the specified config file.`
+  --config=<conf-file>    Use the specified config file.
+  -n --notify-send        Use notify-send for GUI feedback.`
 
 	args, _ := docopt.Parse(usage, nil, true, "Backup Scheduler 0.1", false)
 
@@ -45,6 +47,7 @@ Options:
 		cmdDoBackup,
 		logNormal,
 		defaultConfFile,
+		false,
 	}
 
 	if args["need-backup"].(bool) {
@@ -56,6 +59,7 @@ Options:
 	if conf, ok := args["--config"].(string); ok {
 		result.confPath = conf
 	}
+	result.notifySend = args["--notify-send"].(bool)
 
 	return result
 }
@@ -83,7 +87,7 @@ func handleCommand(opts cmdlineOpts) error {
 	backsched.Debugf("config file:\n%v", conf.String())
 	switch opts.command {
 	case cmdNeedBackup:
-		return backsched.NeedBackup(*conf, *state)
+		return backsched.NeedBackup(*conf, *state, opts.notifySend)
 	case cmdDoBackup:
 		return backsched.Backup(*conf, *state)
 	}
