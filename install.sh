@@ -11,6 +11,7 @@ configdir=~/.backsched
 go build ./cmd/backsched
 install -d "${bindir}"
 install -T -m 755 backsched "${bindir}/backsched"
+rm backsched
 
 # install the config dir
 install -d "${configdir}"

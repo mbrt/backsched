@@ -80,8 +80,8 @@ type BackupResults []BackupResult
 
 func (bs BackupResults) String() string {
 	res := make([]string, len(bs))
-	for i, r := range res {
-		res[i] = fmt.Sprintf("  - %v\n", r)
+	for i, r := range bs {
+		res[i] = fmt.Sprintf("  - %v", r)
 	}
 	return strings.Join(res, "\n")
 }
