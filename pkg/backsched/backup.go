@@ -13,7 +13,7 @@ import (
 // Backup executes all the backups provided in the config, if possible
 func Backup(c Config, s State) error {
 	exec := osExecutor{}
-	backs, err := MakeBackuppers(c, exec)
+	backs, err := MakeBackuppers(c)
 	if err != nil {
 		return errors.Wrap(err, "error making backuppers from config")
 	}
@@ -31,9 +31,9 @@ func Backup(c Config, s State) error {
 // Backupper is able to perform a certain backup
 type Backupper interface {
 	// Backup executes the backup
-	Backup() error
+	Backup(ex Executor) error
 	// CanBackup returns true if the backup destination is available
-	CanBackup() bool
+	CanBackup(ex Executor) bool
 }
 
 // NamedBackupper is a backup executor with a name
@@ -49,11 +49,11 @@ type Backuppers []NamedBackupper
 func (bs Backuppers) Backup(exec Executor, state State) BackupResults {
 	res := []BackupResult{}
 	for _, b := range bs {
-		if !b.CanBackup() {
+		if !b.CanBackup(exec) {
 			res = append(res, BackupResult{b.Name, errors.New("SKIPPED")})
 			continue
 		}
-		if err := b.Backup(); err != nil {
+		if err := b.Backup(exec); err != nil {
 			res = append(res, BackupResult{b.Name, errors.Wrap(err, "FAILED")})
 			continue
 		}
@@ -64,11 +64,11 @@ func (bs Backuppers) Backup(exec Executor, state State) BackupResults {
 }
 
 // MakeBackuppers creates a list of backuppers from a config.
-func MakeBackuppers(c Config, ex Executor) (Backuppers, error) {
+func MakeBackuppers(c Config) (Backuppers, error) {
 	var res Backuppers
 	for _, b := range c.Backups {
 		if b.Rsync != nil {
-			rb := rsyncBackup{b.Src, b.SrcDirs, *b.Rsync, ex}
+			rb := rsyncBackup{b.Src, b.SrcDirs, *b.Rsync}
 			res = append(res, NamedBackupper{rb, b.Name})
 		}
 	}
@@ -103,10 +103,9 @@ type rsyncBackup struct {
 	src     string
 	srcDirs []string
 	rconf   RsyncConf
-	ex      Executor
 }
 
-func (r rsyncBackup) Backup() error {
+func (r rsyncBackup) Backup(ex Executor) error {
 	srcRoot, err := ExpandHome(r.src)
 	if err != nil {
 		return err
@@ -119,19 +118,19 @@ func (r rsyncBackup) Backup() error {
 	for _, sd := range r.srcDirs {
 		spath := EnsureTrailing(path.Join(srcRoot, sd))
 		dpath := EnsureTrailing(path.Join(destRoot, sd))
-		if err := r.ex.Mkdir(dpath, 0755); err != nil {
+		if err := ex.Mkdir(dpath, 0755); err != nil {
 			return errors.Wrap(err, fmt.Sprintf("cannot create dest %v", dpath))
 		}
 		args := []string{}
 		args = append(args, r.rconf.Args...)
 		args = append(args, spath, dpath)
-		if err := r.ex.Exec("rsync", args...); err != nil {
+		if err := ex.Exec("rsync", args...); err != nil {
 			return errors.Wrap(err, "rsync failed")
 		}
 	}
 	return nil
 }
 
-func (r rsyncBackup) CanBackup() bool {
-	return r.ex.DirExists(r.src) && r.ex.DirExists(r.rconf.Dest)
+func (r rsyncBackup) CanBackup(ex Executor) bool {
+	return ex.DirExists(r.src) && ex.DirExists(r.rconf.Dest)
 }
