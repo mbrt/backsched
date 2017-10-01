@@ -1,0 +1,9 @@
+[Unit]
+Description=Run backsched check every 24 hours
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=24h
+
+[Install]
+WantedBy=default.target
