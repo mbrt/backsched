@@ -12,7 +12,7 @@ import (
 func NeedBackup(config Config, state State, wmNotify bool) error {
 	outdated := ComputeOutdated(config, state)
 	if wmNotify {
-		return reportOutdated(outdated, notifySend{cmdExecutor{}, "backsched"})
+		return reportOutdated(outdated, notifySend{osExecutor{}, "backsched"})
 	}
 	return reportOutdated(outdated, nil)
 }
