@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -71,6 +72,10 @@ func MakeBackuppers(c Config) (Backuppers, error) {
 			rb := rsyncBackup{b.Src, b.SrcDirs, *b.Rsync}
 			res = append(res, NamedBackupper{rb, b.Name})
 		}
+		if b.Restic != nil {
+			rb := resticBackup{b.Src, b.SrcDirs, *b.Restic}
+			res = append(res, NamedBackupper{rb, b.Name})
+		}
 	}
 	return res, nil
 }
@@ -106,18 +111,9 @@ type rsyncBackup struct {
 }
 
 func (r rsyncBackup) Backup(ex Executor) error {
-	srcRoot, err := ExpandHome(r.src)
-	if err != nil {
-		return err
-	}
-	destRoot, err := ExpandHome(r.rconf.Dest)
-	if err != nil {
-		return err
-	}
-
 	for _, sd := range r.srcDirs {
-		spath := EnsureTrailing(path.Join(srcRoot, sd))
-		dpath := EnsureTrailing(path.Join(destRoot, sd))
+		spath := EnsureTrailing(path.Join(r.src, sd))
+		dpath := EnsureTrailing(path.Join(r.rconf.Dest, sd))
 		if err := ex.Mkdir(dpath, 0755); err != nil {
 			return errors.Wrap(err, fmt.Sprintf("cannot create dest %v", dpath))
 		}
@@ -132,5 +128,53 @@ func (r rsyncBackup) Backup(ex Executor) error {
 }
 
 func (r rsyncBackup) CanBackup(ex Executor) bool {
+	return ex.DirExists(r.src) && ex.DirExists(r.rconf.Dest)
+}
+
+type resticBackup struct {
+	src     string
+	srcDirs []string
+	rconf   ResticConf
+}
+
+func (r resticBackup) Backup(ex Executor) error {
+	pwd, err := ex.Input(fmt.Sprintf("[%s] backup password", r.rconf.Dest))
+	if err != nil {
+		return errors.Wrap(err, "error in password input")
+	}
+
+	opts := ExecOptions{
+		WorkDir: r.src,
+		Env:     []string{fmt.Sprintf("RESTIC_PASSWORD=%s", pwd)},
+	}
+
+	args := []string{"-r", r.rconf.Dest, "backup"}
+	args = append(args, r.srcDirs...)
+	if err := ex.ExecOptions(opts, "restic", args...); err != nil {
+		return errors.Wrap(err, "restic backup failed")
+	}
+
+	if r.rconf.Check {
+		args = []string{"-r", r.rconf.Dest, "check"}
+		if err := ex.ExecOptions(opts, "restic", args...); err != nil {
+			return errors.Wrap(err, "restic check failed")
+		}
+	}
+
+	if r.rconf.Cleanup != nil {
+		keepLast := r.rconf.Cleanup.KeepLast
+		if keepLast <= 0 {
+			return errors.New("restic.cleanup.keepLast > 0 is required")
+		}
+		args = []string{"-r", r.rconf.Dest, "forget", "--keep-last", strconv.Itoa(keepLast), "--prune"}
+		if err := ex.ExecOptions(opts, "restic", args...); err != nil {
+			return errors.Wrap(err, "restic cleanup failed")
+		}
+	}
+
+	return nil
+}
+
+func (r resticBackup) CanBackup(ex Executor) bool {
 	return ex.DirExists(r.src) && ex.DirExists(r.rconf.Dest)
 }

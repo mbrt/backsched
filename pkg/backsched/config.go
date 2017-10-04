@@ -59,12 +59,12 @@ type RsyncConf struct {
 type ResticConf struct {
 	Dest    string
 	Check   bool
-	Cleanup ResticCleanupConf
+	Cleanup *ResticCleanupConf `yaml:",omitempty"`
 }
 
 // ResticCleanupConf is the restic cleanup configuration for one backup.
 type ResticCleanupConf struct {
-	KeepLast int
+	KeepLast int `yaml:"keepLast"`
 }
 
 // ParseConfig parses the given config file path.

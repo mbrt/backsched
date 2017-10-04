@@ -15,7 +15,7 @@ backups:
       dest: "/run/media/micheleb/verbatim-bkp/backup/rsync/"
       args: ["-av", "--delete"]
     restic:
-      dest: ""
+      dest: "/run/media/micheleb/verbatim-bkp/backup/restic/"
       check: true
       cleanup:
         keepLast: 5
