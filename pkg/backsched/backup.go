@@ -148,14 +148,14 @@ func (r resticBackup) Backup(ex Executor) error {
 		Env:     []string{fmt.Sprintf("RESTIC_PASSWORD=%s", pwd)},
 	}
 
-	args := []string{"-r", r.rconf.Dest, "backup"}
+	args := []string{"-r", r.rconf.Dest.Dir, "backup"}
 	args = append(args, r.srcDirs...)
 	if err := ex.ExecOptions(opts, "restic", args...); err != nil {
 		return errors.Wrap(err, "restic backup failed")
 	}
 
 	if r.rconf.Check {
-		args = []string{"-r", r.rconf.Dest, "check"}
+		args = []string{"-r", r.rconf.Dest.Dir, "check"}
 		if err := ex.ExecOptions(opts, "restic", args...); err != nil {
 			return errors.Wrap(err, "restic check failed")
 		}
@@ -166,7 +166,7 @@ func (r resticBackup) Backup(ex Executor) error {
 		if keepLast <= 0 {
 			return errors.New("restic.cleanup.keepLast > 0 is required")
 		}
-		args = []string{"-r", r.rconf.Dest, "forget", "--keep-last", strconv.Itoa(keepLast), "--prune"}
+		args = []string{"-r", r.rconf.Dest.Dir, "forget", "--keep-last", strconv.Itoa(keepLast), "--prune"}
 		if err := ex.ExecOptions(opts, "restic", args...); err != nil {
 			return errors.Wrap(err, "restic cleanup failed")
 		}
@@ -176,5 +176,5 @@ func (r resticBackup) Backup(ex Executor) error {
 }
 
 func (r resticBackup) CanBackup(ex Executor) bool {
-	return ex.DirExists(r.src) && ex.DirExists(r.rconf.Dest)
+	return ex.DirExists(r.src) && ex.DirExists(r.rconf.Dest.Dir)
 }

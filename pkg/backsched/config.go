@@ -34,7 +34,7 @@ func (c *Config) expandPaths() {
 			b.Rsync.Dest, _ = ExpandHome(b.Rsync.Dest)
 		}
 		if b.Restic != nil {
-			b.Restic.Dest, _ = ExpandHome(b.Restic.Dest)
+			b.Restic.Dest.Dir, _ = ExpandHome(b.Restic.Dest.Dir)
 		}
 	}
 }
@@ -57,9 +57,24 @@ type RsyncConf struct {
 
 // ResticConf is the restic configuration for one backup
 type ResticConf struct {
-	Dest    string
+	Dest    ResticDestConf
 	Check   bool
 	Cleanup *ResticCleanupConf `yaml:",omitempty"`
+}
+
+// ResticDestConf is the restic destination configuration for one backup.
+//
+// Only one of the two options can be specified at the same time.
+type ResticDestConf struct {
+	Dir    string            `yaml:",omitempty"`
+	GCloud *ResticGCloudConf `yaml:"gcloud,omitempty"`
+}
+
+// ResticGCloudConf is a Google Cloud restic backup configuration.
+type ResticGCloudConf struct {
+	ProjectID string `yaml:"projectId"`
+	CredPath  string `yaml:"credPath"`
+	Bucket    string
 }
 
 // ResticCleanupConf is the restic cleanup configuration for one backup.
