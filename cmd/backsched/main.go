@@ -26,6 +26,7 @@ type cmdlineOpts struct {
 	logs       logLevel
 	confPath   string
 	notifySend bool
+	all        bool
 }
 
 func parseArgs() cmdlineOpts {
@@ -33,21 +34,23 @@ func parseArgs() cmdlineOpts {
 
 Usage:
   backsched need-backup [options] [-n]
-  backsched backup [options]
+  backsched backup [options] [-a]
 
 Options:
   -h --help               Show this screen.
   --verbose               Verbose output.
   --config=<conf-file>    Use the specified config file.
+  -a --all                Backup everything, even if not expired.
   -n --notify-send        Use notify-send for GUI feedback.`
 
 	args, _ := docopt.Parse(usage, nil, true, "Backup Scheduler 0.1", false)
 
 	result := cmdlineOpts{
-		cmdDoBackup,
-		logNormal,
-		defaultConfFile,
-		false,
+		command:    cmdDoBackup,
+		logs:       logNormal,
+		confPath:   defaultConfFile,
+		notifySend: false,
+		all:        false,
 	}
 
 	if args["need-backup"].(bool) {
@@ -60,6 +63,7 @@ Options:
 		result.confPath = conf
 	}
 	result.notifySend = args["--notify-send"].(bool)
+	result.all = args["--all"].(bool)
 
 	return result
 }
@@ -71,6 +75,25 @@ func setupLogger(level logLevel) {
 	case logNormal:
 		break
 	}
+}
+
+func keepOutdated(cfg backsched.Config, state backsched.State) backsched.Config {
+	outdated := backsched.ComputeOutdated(cfg, state)
+
+	names := map[string]struct{}{}
+	for _, c := range outdated {
+		names[c.Name] = struct{}{}
+	}
+
+	var backups []backsched.BackupConf
+	for _, b := range cfg.Backups {
+		if _, ok := names[b.Name]; ok {
+			backups = append(backups, b)
+		}
+	}
+
+	cfg.Backups = backups
+	return cfg
 }
 
 func handleCommand(opts cmdlineOpts) error {
@@ -89,7 +112,11 @@ func handleCommand(opts cmdlineOpts) error {
 	case cmdNeedBackup:
 		return backsched.NeedBackup(*conf, *state, opts.notifySend)
 	case cmdDoBackup:
-		return backsched.Backup(*conf, *state)
+		if opts.all {
+			return backsched.Backup(*conf, *state)
+		}
+		cfg := keepOutdated(*conf, *state)
+		return backsched.Backup(cfg, *state)
 	}
 	panic("command not found??")
 }
