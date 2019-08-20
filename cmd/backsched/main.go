@@ -116,6 +116,10 @@ func handleCommand(opts cmdlineOpts) error {
 			return backsched.Backup(*conf, *state)
 		}
 		cfg := keepOutdated(*conf, *state)
+		if len(cfg.Backups) == 0 {
+			fmt.Fprintln(os.Stderr, "nothing to backup")
+			return nil
+		}
 		return backsched.Backup(cfg, *state)
 	}
 	panic("command not found??")
