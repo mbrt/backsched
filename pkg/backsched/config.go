@@ -35,6 +35,9 @@ func (c *Config) expandPaths() {
 		}
 		if b.Restic != nil {
 			b.Restic.Dest.Dir, _ = ExpandHome(b.Restic.Dest.Dir)
+			if gcloud := b.Restic.Dest.GCloud; gcloud != nil {
+				gcloud.CredPath, _ = ExpandHome(gcloud.CredPath)
+			}
 		}
 	}
 }

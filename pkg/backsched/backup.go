@@ -138,24 +138,24 @@ type resticBackup struct {
 }
 
 func (r resticBackup) Backup(ex Executor) error {
-	pwd, err := ex.Input(fmt.Sprintf("[%s] backup password", r.rconf.Dest))
+	pwd, err := ex.Input(fmt.Sprintf("[%s] backup password", r.dest()))
 	if err != nil {
 		return errors.Wrap(err, "error in password input")
 	}
 
 	opts := ExecOptions{
 		WorkDir: r.src,
-		Env:     []string{fmt.Sprintf("RESTIC_PASSWORD=%s", pwd)},
+		Env:     r.env(pwd),
 	}
 
-	args := []string{"-r", r.rconf.Dest.Dir, "backup"}
+	args := []string{"-r", r.dest(), "backup"}
 	args = append(args, r.srcDirs...)
 	if err := ex.ExecOptions(opts, "restic", args...); err != nil {
 		return errors.Wrap(err, "restic backup failed")
 	}
 
 	if r.rconf.Check {
-		args = []string{"-r", r.rconf.Dest.Dir, "check"}
+		args = []string{"-r", r.dest(), "check"}
 		if err := ex.ExecOptions(opts, "restic", args...); err != nil {
 			return errors.Wrap(err, "restic check failed")
 		}
@@ -166,7 +166,7 @@ func (r resticBackup) Backup(ex Executor) error {
 		if keepLast <= 0 {
 			return errors.New("restic.cleanup.keepLast > 0 is required")
 		}
-		args = []string{"-r", r.rconf.Dest.Dir, "forget", "--keep-last", strconv.Itoa(keepLast), "--prune"}
+		args = []string{"-r", r.dest(), "forget", "--keep-last", strconv.Itoa(keepLast), "--prune"}
 		if err := ex.ExecOptions(opts, "restic", args...); err != nil {
 			return errors.Wrap(err, "restic cleanup failed")
 		}
@@ -176,5 +176,28 @@ func (r resticBackup) Backup(ex Executor) error {
 }
 
 func (r resticBackup) CanBackup(ex Executor) bool {
-	return ex.DirExists(r.src) && ex.DirExists(r.rconf.Dest.Dir)
+	if !ex.DirExists(r.src) {
+		return false
+	}
+	if r.rconf.Dest.GCloud != nil {
+		// No way to know whether we can backup remotely. Assuming we can.
+		return true
+	}
+	return ex.DirExists(r.rconf.Dest.Dir)
+}
+
+func (r resticBackup) dest() string {
+	if r.rconf.Dest.GCloud != nil {
+		return r.rconf.Dest.GCloud.Bucket
+	}
+	return r.rconf.Dest.Dir
+}
+
+func (r resticBackup) env(pwd string) []string {
+	res := []string{fmt.Sprintf("RESTIC_PASSWORD=%s", pwd)}
+	if gcloud := r.rconf.Dest.GCloud; gcloud != nil {
+		res = append(res, fmt.Sprintf("GOOGLE_PROJECT_ID=%s", gcloud.ProjectID))
+		res = append(res, fmt.Sprintf("GOOGLE_APPLICATION_CREDENTIALS=%s", gcloud.CredPath))
+	}
+	return res
 }
