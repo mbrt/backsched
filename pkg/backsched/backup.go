@@ -195,9 +195,15 @@ func (r resticBackup) dest() string {
 
 func (r resticBackup) env(pwd string) []string {
 	res := []string{fmt.Sprintf("RESTIC_PASSWORD=%s", pwd)}
+
+	if home, err := Home(); err == nil {
+		// In case of errors, just avoid setting the home directory.
+		res = append(res, fmt.Sprintf("HOME=%s", home))
+	}
 	if gcloud := r.rconf.Dest.GCloud; gcloud != nil {
 		res = append(res, fmt.Sprintf("GOOGLE_PROJECT_ID=%s", gcloud.ProjectID))
 		res = append(res, fmt.Sprintf("GOOGLE_APPLICATION_CREDENTIALS=%s", gcloud.CredPath))
 	}
+
 	return res
 }

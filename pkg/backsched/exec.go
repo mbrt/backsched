@@ -2,7 +2,6 @@ package backsched
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 
@@ -45,24 +44,16 @@ func (c osExecutor) ExecOptions(opts ExecOptions, cmd string, args ...string) er
 	sp := exec.Command(cmd, args...)
 	sp.Dir = opts.WorkDir
 	sp.Env = opts.Env
-	stdout, err := sp.StdoutPipe()
-	if err != nil {
-		return errors.Wrap(err, "cannot pipe stdout")
-	}
-	stderr, err := sp.StderrPipe()
-	if err != nil {
-		return errors.Wrap(err, "cannot pipe stderr")
-	}
-	if err = sp.Start(); err != nil {
+	sp.Stdout = os.Stdout
+	sp.Stderr = os.Stderr
+
+	if err := sp.Start(); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("cannot start %s", cmd))
 	}
-	_, _ = io.Copy(os.Stdout, stdout)
-	_, _ = io.Copy(os.Stderr, stderr)
-
-	err = sp.Wait()
-	if err != nil {
+	if err := sp.Wait(); err != nil {
 		return errors.Wrap(err, "wait failed")
 	}
+
 	return nil
 }
 

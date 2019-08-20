@@ -23,12 +23,18 @@ func ExpandHome(p string) (string, error) {
 		rest = p[2:]
 	}
 
-	usr, err := user.Current()
+	home, err := Home()
 	if err != nil {
 		return "", errors.Wrap(err, "cannot expand home dir in path")
 	}
-	p = path.Join(usr.HomeDir, rest)
+	p = path.Join(home, rest)
 	return p, nil
+}
+
+// Home returns the current user home directory.
+func Home() (string, error) {
+	usr, err := user.Current()
+	return usr.HomeDir, err
 }
 
 // EnsureTrailing ensures that the given path ends with a trailing slash.
