@@ -24,7 +24,7 @@ func TestNeedBackup(t *testing.T) {
 	}
 	outdated := ComputeOutdated(conf, state)
 	expected := []OutdatedBackup{
-		OutdatedBackup{"one", 10, false},
+		{"one", 10, false},
 	}
 	assert.Equal(t, expected, outdated)
 }

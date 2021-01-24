@@ -48,7 +48,7 @@ func TestRsyncBackup(t *testing.T) {
 		Version:   "v1",
 		StatePath: "",
 		Backups: []BackupConf{
-			BackupConf{
+			{
 				Name:      "foo",
 				EveryDays: 3,
 				Src:       "/my/src",
@@ -74,8 +74,8 @@ func TestRsyncBackup(t *testing.T) {
 		},
 	}
 	expCmd := []testExecCmd{
-		testExecCmd{ExecOptions{}, []string{"rsync", "arg1", "arg2", "/my/src/bar/baz/", "/dest/bar/baz/"}},
-		testExecCmd{ExecOptions{}, []string{"rsync", "arg1", "arg2", "/my/src/z/", "/dest/z/"}},
+		{ExecOptions{}, []string{"rsync", "arg1", "arg2", "/my/src/bar/baz/", "/dest/bar/baz/"}},
+		{ExecOptions{}, []string{"rsync", "arg1", "arg2", "/my/src/z/", "/dest/z/"}},
 	}
 	expMkdirs := []string{
 		"/dest/bar/baz/",
@@ -92,13 +92,13 @@ func TestResticBackup(t *testing.T) {
 		Version:   "v1",
 		StatePath: "",
 		Backups: []BackupConf{
-			BackupConf{
+			{
 				Name:      "foo",
 				EveryDays: 3,
 				Src:       "/my/src",
 				SrcDirs:   []string{"bar/baz", "z"},
 				Restic: &ResticConf{
-					Dest:    "/dest",
+					Dest:    ResticDestConf{Dir: "/dest"},
 					Check:   false,
 					Cleanup: nil,
 				},
@@ -127,7 +127,7 @@ func TestResticBackup(t *testing.T) {
 		Env:     []string{"RESTIC_PASSWORD=mypass"},
 	}
 	expCmd := []testExecCmd{
-		testExecCmd{opts, []string{"restic", "-r", "/dest", "backup", "bar/baz", "z"}},
+		{opts, []string{"restic", "-r", "/dest", "backup", "bar/baz", "z"}},
 	}
 
 	assert.Equal(t, expRes, res)
@@ -140,13 +140,13 @@ func TestResticBackupCleanupAndCheck(t *testing.T) {
 		Version:   "v1",
 		StatePath: "",
 		Backups: []BackupConf{
-			BackupConf{
+			{
 				Name:      "foo",
 				EveryDays: 3,
 				Src:       "/my/src",
 				SrcDirs:   []string{"bar/baz", "z"},
 				Restic: &ResticConf{
-					Dest:    "/dest",
+					Dest:    ResticDestConf{Dir: "/dest"},
 					Check:   true,
 					Cleanup: &ResticCleanupConf{4},
 				},
@@ -175,9 +175,9 @@ func TestResticBackupCleanupAndCheck(t *testing.T) {
 		Env:     []string{"RESTIC_PASSWORD=mypass"},
 	}
 	expCmd := []testExecCmd{
-		testExecCmd{opts, []string{"restic", "-r", "/dest", "backup", "bar/baz", "z"}},
-		testExecCmd{opts, []string{"restic", "-r", "/dest", "check"}},
-		testExecCmd{opts, []string{"restic", "-r", "/dest", "forget", "--keep-last", "4", "--prune"}},
+		{opts, []string{"restic", "-r", "/dest", "backup", "bar/baz", "z"}},
+		{opts, []string{"restic", "-r", "/dest", "check"}},
+		{opts, []string{"restic", "-r", "/dest", "forget", "--keep-last", "4", "--prune"}},
 	}
 
 	assert.Equal(t, expRes, res)
