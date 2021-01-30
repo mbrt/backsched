@@ -27,6 +27,18 @@ func runBackup() error {
 	if err != nil {
 		return fmt.Errorf("parsing config %q: %w", p, err)
 	}
-	fmt.Println(cfg)
+
+	for _, bc := range cfg.Backups {
+		b := NewBackup(bc, OSExecutor{}, nil)
+		if err := b.CanExecute(); err != nil {
+			fmt.Printf("Skipping backup %q because: %v", b.cfg.Name, err)
+			continue
+		}
+		fmt.Printf("Executing backup %q\n", bc.Name)
+		if err := b.Run(); err != nil {
+			return fmt.Errorf("backup %q failed: %w", bc.Name, err)
+		}
+	}
+
 	return nil
 }

@@ -10,11 +10,6 @@ import (
 )
 
 func main() {
-	yes, err := dlgs.Question("Question", "Are you sure you want to format this media?", true)
-	if err != nil {
-		panic(err)
-	}
-	println(yes)
 	if err := rootCmd.Execute(); err != nil {
 		fatal(err)
 	}
