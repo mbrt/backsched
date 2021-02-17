@@ -1,9 +1,10 @@
-package main
+package config
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/google/go-jsonnet"
 
@@ -12,25 +13,30 @@ import (
 
 // Config is the configuration format.
 type Config struct {
-	Version string      `json:"version"`
-	Backups []BackupCfg `json:"backups"`
+	Version string   `json:"version"`
+	Backups []Backup `json:"backups"`
 }
 
-// BackupCfg is the configuration for a backup.
-type BackupCfg struct {
+// Backup is the configuration for a backup.
+type Backup struct {
 	// Name is the name of the backup. Must be unique.
 	Name string `json:"name"`
+	// Commands is a list of commands to execute in order.
+	Commands []Command `json:"commands"`
+	// Requires is an optional list of requirements.
+	Requires []Requirement `json:"requires"`
+	// Interval is the time interval between backups.
+	Interval Duration `json:"every"`
+}
+
+// Command represents a command to run.
+type Command struct {
 	// Cmd is the full path to the command to run.
 	Cmd string `json:"cmd"`
 	// Args is the list of arguments to pass
 	Args []string `json:"args"`
 	// Env is a map of environment variables with their value.
 	Env map[string]string `json:"env"`
-	// SecretEnv is list of environment variables which value is not present in
-	// the config and must be asked to the user.
-	SecretEnv []string `json:"secretEnv"`
-	// Requires is an optional list of requirements.
-	Requires []Requirement `json:"requires"`
 }
 
 // Requirement is a backup requirement.
@@ -50,6 +56,39 @@ func Parse(path string) (Config, error) {
 	}
 	err = jsonUnmarshalStrict([]byte(js), &cfg)
 	return cfg, err
+}
+
+// Duration is a wrapper arond duration.
+//
+// See https://github.com/golang/go/issues/10275 and
+// https://stackoverflow.com/q/48050945/1667955.
+type Duration time.Duration
+
+// MarshalJSON provides custom JSON marshalling for Duration.
+func (d Duration) MarshalJSON() ([]byte, error) {
+	return json.Marshal(time.Duration(d).String())
+}
+
+// UnmarshalJSON provides custom JSON unmarshalling for Duration.
+func (d *Duration) UnmarshalJSON(b []byte) error {
+	var v interface{}
+	if err := json.Unmarshal(b, &v); err != nil {
+		return err
+	}
+	switch value := v.(type) {
+	case float64:
+		*d = Duration(time.Duration(value))
+		return nil
+	case string:
+		tmp, err := time.ParseDuration(value)
+		if err != nil {
+			return err
+		}
+		*d = Duration(tmp)
+		return nil
+	default:
+		return errors.New("invalid duration")
+	}
 }
 
 func jsonUnmarshalStrict(buf []byte, v interface{}) error {
