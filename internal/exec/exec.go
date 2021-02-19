@@ -9,7 +9,7 @@ import (
 
 // Config is an Executor configuration.
 type Config struct {
-	Reqs []Req
+	Reqs []Requirement
 	Cmds []Cmd
 }
 
@@ -23,8 +23,8 @@ type Cmd struct {
 	Args []string
 }
 
-// Req is a requirement to satisfy.
-type Req interface {
+// Requirement is a requirement to satisfy.
+type Requirement interface {
 	Check(ctx context.Context, o Os) error
 }
 

@@ -26,7 +26,7 @@ type Backup struct {
 	// Requires is an optional list of requirements.
 	Requires []Requirement `json:"requires"`
 	// Interval is the time interval between backups.
-	Interval Duration `json:"every"`
+	Interval Duration `json:"interval"`
 }
 
 // Command represents a command to run.
