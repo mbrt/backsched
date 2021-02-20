@@ -27,9 +27,8 @@ type cmdInfo struct {
 // testRunner is a fake exec.Runner.
 //
 // This struct keeps track of what is ran by creating json files by using the
-// given Fs, under /run/<num>. The files are numbered starting from 1 and
-// progressively increase and contain a JSON representation of the Run
-// arguments.
+// given Fs, under /run/<num>. The files are numbered incrementally and
+// contain a JSON representation of the Run arguments.
 type testRunner struct {
 	fs    afero.Fs
 	count int
@@ -105,7 +104,7 @@ func TestBackup(t *testing.T) {
 	}
 
 	// Run without requirements. Nothing should execute.
-	err = backup.Run(context.Background(), cfg, env)
+	err = backup.Run(context.Background(), cfg, env, false)
 	require.Nil(t, err)
 	ok, _ := afero.Exists(fs, "/run/0")
 	assert.Equal(t, false, ok)
@@ -115,7 +114,7 @@ func TestBackup(t *testing.T) {
 	require.Nil(t, err)
 
 	// Run the backup: only hourly should be executed.
-	err = backup.Run(context.Background(), cfg, env)
+	err = backup.Run(context.Background(), cfg, env, false)
 	require.Nil(t, err)
 	// Check the commands that ran.
 	checkFile(t, fs, "/run/1", hourly[0])
@@ -124,22 +123,22 @@ func TestBackup(t *testing.T) {
 	ok, _ = afero.Exists(fs, "/run/3")
 	assert.Equal(t, false, ok)
 
-	// Create all requirements, but run too early for hourly.
+	// Create all required paths, but run too early for hourly.
 	clock.Advance(30 * time.Minute)
 	err = fs.MkdirAll("/mnt/backup/dir1", 0x700)
 	require.Nil(t, err)
-	err = backup.Run(context.Background(), cfg, env)
+	err = backup.Run(context.Background(), cfg, env, false)
 	require.Nil(t, err)
 	// Check the commands that ran.
 	checkFile(t, fs, "/run/3", weekly[0])
 	checkFile(t, fs, "/run/4", weekly[1])
-	// Weekly shouldn't have ran.
+	// Hourly shouldn't have ran.
 	ok, _ = afero.Exists(fs, "/run/5")
 	assert.Equal(t, false, ok)
 
 	// Wait more, now hourly can run but weekly can't.
 	clock.Advance(45 * time.Minute)
-	err = backup.Run(context.Background(), cfg, env)
+	err = backup.Run(context.Background(), cfg, env, false)
 	require.Nil(t, err)
 	// Check the commands that ran.
 	checkFile(t, fs, "/run/5", hourly[0])
@@ -150,7 +149,7 @@ func TestBackup(t *testing.T) {
 
 	// Now wait a week. Everything should be ready to run.
 	clock.Advance(8 * 24 * time.Hour)
-	err = backup.Run(context.Background(), cfg, env)
+	err = backup.Run(context.Background(), cfg, env, false)
 	require.Nil(t, err)
 	// Check the commands that ran.
 	checkFile(t, fs, "/run/7", weekly[0])

@@ -14,10 +14,15 @@ import (
 )
 
 // Run runs the given backup configuration.
-func Run(ctx context.Context, cfg config.Config, env Env) error {
+func Run(ctx context.Context, cfg config.Config, env Env, dry bool) error {
 	state := loadState(env.Sio)
-	// Make sure we save the state at the end.
-	defer saveState(env.Sio, state)
+	if dry {
+		// Avoid running anything.
+		env.Runner = dryRunner{}
+	} else {
+		// Make sure we save the state at the end.
+		defer saveState(env.Sio, state)
+	}
 
 	for _, bc := range cfg.Backups {
 		clog := log.With().Str("backup", bc.Name).Logger()
@@ -104,4 +109,16 @@ func newExecutorFromConfig(bc config.Backup, env Env) exec.Executor {
 		Fs:     env.Fs,
 		Runner: env.Runner,
 	}
+}
+
+type dryRunner struct{}
+
+// Run runs a command as a subprocess.
+func (dryRunner) Run(ctx context.Context, cmd string, env map[string]string, args []string) error {
+	log.Info().
+		Str("cmd", cmd).
+		Str("args", fmt.Sprintf("%v", args)).
+		Str("env", fmt.Sprintf("%v", env)).
+		Msg("Would have run a command")
+	return nil
 }

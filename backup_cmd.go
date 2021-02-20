@@ -19,6 +19,8 @@ const (
 	configFile = "config.jsonnet"
 )
 
+var dryRun bool
+
 var backupCmd = &cobra.Command{
 	Use:   "backup",
 	Short: "Performs the configured backups",
@@ -31,6 +33,8 @@ var backupCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(backupCmd)
+
+	backupCmd.Flags().BoolVarP(&dryRun, "dry-run", "", false, "only simulate the backup run.")
 }
 
 func runBackup() error {
@@ -44,7 +48,7 @@ func runBackup() error {
 		Clock:  clockwork.NewRealClock(),
 		Fs:     afero.NewOsFs(),
 		Runner: exec.DefaultRunner{},
-	})
+	}, dryRun)
 }
 
 type stateIO struct{}

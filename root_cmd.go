@@ -41,9 +41,6 @@ func initConfig() {
 	cfgDirs = configdir.New("mbrt", "backsched")
 	cfgDirs.LocalPath = cfgDirFlag
 	cfgDir = cfgDirs.QueryFolderContainsFile("config.jsonnet")
-	if cfgDir == nil {
-		log.Fatal().Msgf(`cannot find config file "config.jsonnet"`)
-	}
 }
 
 func initLogger() {
