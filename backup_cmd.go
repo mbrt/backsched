@@ -6,10 +6,12 @@ import (
 
 	"github.com/jonboulle/clockwork"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
 	"github.com/mbrt/backsched/internal/backup"
 	"github.com/mbrt/backsched/internal/config"
+	"github.com/mbrt/backsched/internal/exec"
 )
 
 const (
@@ -38,8 +40,10 @@ func runBackup() error {
 		return fmt.Errorf("parsing config %q: %w", p, err)
 	}
 	return backup.Run(ctx, cfg, backup.Env{
-		Sio:   stateIO{},
-		Clock: clockwork.NewRealClock(),
+		Sio:    stateIO{},
+		Clock:  clockwork.NewRealClock(),
+		Fs:     afero.NewOsFs(),
+		Runner: exec.DefaultRunner{},
 	})
 }
 

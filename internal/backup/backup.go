@@ -7,6 +7,7 @@ import (
 
 	"github.com/jonboulle/clockwork"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 
 	"github.com/mbrt/backsched/internal/config"
 	"github.com/mbrt/backsched/internal/exec"
@@ -25,7 +26,7 @@ func Run(ctx context.Context, cfg config.Config, env Env) error {
 			continue
 		}
 
-		b := newExecutorFromConfig(bc)
+		b := newExecutorFromConfig(bc, env)
 		if err := b.CanExecute(ctx); err != nil {
 			clog.Info().Msgf("Skipping because: %v", err)
 			continue
@@ -42,8 +43,10 @@ func Run(ctx context.Context, cfg config.Config, env Env) error {
 
 // Env groups together the environment a backup is ran against.
 type Env struct {
-	Sio   StateIOer
-	Clock clockwork.Clock
+	Sio    StateIOer
+	Clock  clockwork.Clock
+	Fs     afero.Fs
+	Runner exec.Runner
 }
 
 // StateIOer abstracts away lower level save and load functionality for the
@@ -77,7 +80,7 @@ func saveState(sio StateIOer, s config.State) {
 	}
 }
 
-func newExecutorFromConfig(bc config.Backup) exec.Executor {
+func newExecutorFromConfig(bc config.Backup, env Env) exec.Executor {
 	var reqs []exec.Requirement
 	for _, r := range bc.Requires {
 		if r.Path != nil {
@@ -98,6 +101,7 @@ func newExecutorFromConfig(bc config.Backup) exec.Executor {
 			Reqs: reqs,
 			Cmds: cmds,
 		},
-		Os: exec.LocalOs{},
+		Fs:     env.Fs,
+		Runner: env.Runner,
 	}
 }

@@ -1,0 +1,10 @@
+{
+    "Cmd": "echo",
+    "Args": [
+        "start",
+        "hourly"
+    ],
+    "Env": {
+        "env1": "val1"
+    }
+}

@@ -1,0 +1,8 @@
+{
+    "Cmd": "echo",
+    "Args": [
+        "stop",
+        "weekly"
+    ],
+    "Env": null
+}

@@ -11,6 +11,9 @@ import (
 	"github.com/mbrt/backsched/internal/errors"
 )
 
+// Version is the latest version of the config format.
+const Version = "v1alpha1"
+
 // Config is the configuration format.
 type Config struct {
 	Version string   `json:"version"`
