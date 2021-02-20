@@ -5,31 +5,45 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jonboulle/clockwork"
+	"github.com/rs/zerolog/log"
+
 	"github.com/mbrt/backsched/internal/config"
 	"github.com/mbrt/backsched/internal/exec"
-	"github.com/rs/zerolog/log"
 )
 
 // Run runs the given backup configuration.
-func Run(ctx context.Context, cfg config.Config, sio StateIOer) error {
-	state := loadState(sio)
+func Run(ctx context.Context, cfg config.Config, env Env) error {
+	state := loadState(env.Sio)
 	// Make sure we save the state at the end.
-	defer saveState(sio, state)
+	defer saveState(env.Sio, state)
 
 	for _, bc := range cfg.Backups {
-		b := newExecutorFromConfig(bc)
-		if err := b.CanExecute(ctx); err != nil {
-			log.Info().Msgf("Skipping backup %q because: %v", bc.Name, err)
+		clog := log.With().Str("backup", bc.Name).Logger()
+		if t, ok := state.LastBackupOf(bc.Name); ok && env.Clock.Now().Sub(t) < time.Duration(bc.Interval) {
+			clog.Info().Msgf("Skipping because last backup was at: %v", t)
 			continue
 		}
-		log.Info().Msgf("Executing backup %q\n", bc.Name)
-		if err := b.Run(ctx); err != nil {
-			return fmt.Errorf("backup %q failed: %w", bc.Name, err)
+
+		b := newExecutorFromConfig(bc)
+		if err := b.CanExecute(ctx); err != nil {
+			clog.Info().Msgf("Skipping because: %v", err)
+			continue
 		}
-		state[bc.Name] = time.Now()
+		clog.Info().Msg("Executing")
+		if err := b.Run(ctx); err != nil {
+			return fmt.Errorf("executing backup %q: %w", bc.Name, err)
+		}
+		state[bc.Name] = env.Clock.Now()
 	}
 
 	return nil
+}
+
+// Env groups together the environment a backup is ran against.
+type Env struct {
+	Sio   StateIOer
+	Clock clockwork.Clock
 }
 
 // StateIOer abstracts away lower level save and load functionality for the

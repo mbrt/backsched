@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+
+	"github.com/rs/zerolog/log"
 )
 
 // Config is an Executor configuration.
@@ -89,7 +91,7 @@ func (LocalOs) RunCommand(ctx context.Context, cmd string, env map[string]string
 	sp.Stdout = os.Stdout
 	sp.Stderr = os.Stderr
 
-	fmt.Printf("Running %s %v\n", cmd, args)
+	log.Info().Msgf("Running %s %v\n", cmd, args)
 	if err := sp.Start(); err != nil {
 		return fmt.Errorf("starting %q: %v", cmd, err)
 	}

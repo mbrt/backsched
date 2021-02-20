@@ -16,7 +16,7 @@ local days(x) = (24 * x) + 'h';
         {
           cmd: 'sleep',
           args: [
-            '60',
+            '15',
           ],
         },
         {

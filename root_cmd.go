@@ -17,7 +17,6 @@ var (
 	cfgDirFlag string
 	cfgDirs    configdir.ConfigDir
 	cfgDir     *configdir.Config
-	cacheDir   *configdir.Config
 
 	// Global context.
 	ctx context.Context
@@ -45,7 +44,6 @@ func initConfig() {
 	if cfgDir == nil {
 		log.Fatal().Msgf(`cannot find config file "config.jsonnet"`)
 	}
-	cacheDir = cfgDirs.QueryCacheFolder()
 }
 
 func initLogger() {

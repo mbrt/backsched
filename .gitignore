@@ -1,2 +1,3 @@
 ./backsched
 cmd/backsched/backsched
+testfiles/manual/state.json
