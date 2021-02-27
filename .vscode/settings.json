@@ -1,0 +1,5 @@
+{
+    "jsonnet.extStrs": {
+        "HOME": "/home/foo"
+    }
+}

@@ -5,6 +5,10 @@ local joinPath(p, q) = ensureDir(p) + q;
 
 
 {
+  env: {
+      HOME: std.extVar('HOME'),
+  },
+
   // rsync.
   //
   // Uses rsync to backup a source to a destination directory.
@@ -38,19 +42,29 @@ local joinPath(p, q) = ensureDir(p) + q;
       for p in subdirs
     ]),
 
-  restic(src, dest, subdirs, gcloud_cfg)::
+  restic(src, dest, subdirs, keep_last=null, gcloud=null)::
+    local env = {
+      HOME: $.env.HOME,
+      GOOGLE_PROJECT_ID: if gcloud != null then gcloud.project_id else null,
+      GOOGLE_APPLICATION_CREDENTIALS: if gcloud != null then gcloud.creds_path else null,
+    };
+    local run(args) = {
+      cmd: 'restic',
+      args: ['-r', dest] + args,
+      env: env,
+      workdir: src,
+    };
+
     [
-      {
-        cmd: 'restic',
-        args: [
-          '-r',
-          dest,
-          'backup',
-        ] + subdirs,
-        env: {
-          HOME: std.extVar('HOME'),
-        },
-        workdir: src,
-      },
+      run(['backup'] + subdirs),
+      run(['check']),
+    ] + if keep_last == null then []
+    else [
+      run([
+        'forget',
+        '--keep-last',
+        std.toString(keep_last),
+        '--prune',
+      ]),
     ],
 }
