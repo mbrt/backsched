@@ -1,10 +1,11 @@
 {
+    "Env": {
+        "env1": "val1"
+    },
     "Cmd": "echo",
     "Args": [
         "start",
         "hourly"
     ],
-    "Env": {
-        "env1": "val1"
-    }
+    "Workdir": "/home"
 }

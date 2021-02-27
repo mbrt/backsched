@@ -1,8 +1,9 @@
 {
+    "Env": null,
     "Cmd": "echo",
     "Args": [
         "stop",
         "hourly"
     ],
-    "Env": null
+    "Workdir": ""
 }

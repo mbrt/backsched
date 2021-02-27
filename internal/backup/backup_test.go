@@ -16,13 +16,8 @@ import (
 
 	"github.com/mbrt/backsched/internal/backup"
 	"github.com/mbrt/backsched/internal/config"
+	"github.com/mbrt/backsched/internal/exec"
 )
-
-type cmdInfo struct {
-	Cmd  string
-	Args []string
-	Env  map[string]string
-}
 
 // testRunner is a fake exec.Runner.
 //
@@ -34,12 +29,12 @@ type testRunner struct {
 	count int
 }
 
-func (t *testRunner) Run(ctx context.Context, cmd string, env map[string]string, args []string) error {
+func (t *testRunner) Run(ctx context.Context, cmd exec.Cmd) error {
 	t.count++
 	if err := t.fs.MkdirAll("/run", 0o700); err != nil {
 		return err
 	}
-	data, err := json.MarshalIndent(cmdInfo{Cmd: cmd, Args: args, Env: env}, "", "    ")
+	data, err := json.MarshalIndent(cmd, "", "    ")
 	if err != nil {
 		return err
 	}

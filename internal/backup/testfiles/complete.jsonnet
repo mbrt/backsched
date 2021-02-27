@@ -7,6 +7,7 @@ local backupcmd(name) = [
     env: {
       env1: 'val1',
     },
+    workdir: '/home',
   },
   {
     cmd: 'echo',

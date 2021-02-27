@@ -20,10 +20,12 @@ type Config struct {
 type Cmd struct {
 	// Env is the environment variables to pass.
 	Env map[string]string
-	// Exe is the executable to call.
-	Exe string
+	// Cmd is the executable to call.
+	Cmd string
 	// Args is the command line arguments.
 	Args []string
+	// Workdir is the working directory.
+	Workdir string
 }
 
 // Requirement is a requirement to satisfy.
@@ -68,7 +70,7 @@ func (e Executor) CanExecute(ctx context.Context) error {
 // Run runs the backup.
 func (e Executor) Run(ctx context.Context) error {
 	for _, c := range e.Cfg.Cmds {
-		if err := e.Runner.Run(ctx, c.Exe, c.Env, c.Args); err != nil {
+		if err := e.Runner.Run(ctx, c); err != nil {
 			return err
 		}
 	}
@@ -77,25 +79,28 @@ func (e Executor) Run(ctx context.Context) error {
 
 // Runner is an abstraction over command execution.
 type Runner interface {
-	Run(ctx context.Context, cmd string, env map[string]string, args []string) error
+	Run(ctx context.Context, cmd Cmd) error
 }
 
 // DefaultRunner executes the commands on the local system.
 type DefaultRunner struct{}
 
 // Run runs a command as a subprocess.
-func (DefaultRunner) Run(ctx context.Context, cmd string, env map[string]string, args []string) error {
-	sp := exec.CommandContext(ctx, cmd, args...)
-	sp.Env = toOSEnv(env)
+func (DefaultRunner) Run(ctx context.Context, cmd Cmd) error {
+	sp := exec.CommandContext(ctx, cmd.Cmd, cmd.Args...)
+	sp.Env = toOSEnv(cmd.Env)
 	sp.Stdout = os.Stdout
 	sp.Stderr = os.Stderr
+	if cmd.Workdir != "" {
+		sp.Dir = cmd.Workdir
+	}
 
-	log.Info().Msgf("Running %s %v\n", cmd, args)
+	log.Info().Msgf("Running %s %v\n", cmd.Cmd, cmd.Args)
 	if err := sp.Start(); err != nil {
-		return fmt.Errorf("starting %q: %v", cmd, err)
+		return fmt.Errorf("starting %q: %v", cmd.Cmd, err)
 	}
 	if err := sp.Wait(); err != nil {
-		return fmt.Errorf("waiting for command %q: %v", cmd, err)
+		return fmt.Errorf("waiting for command %q: %v", cmd.Cmd, err)
 	}
 
 	return nil

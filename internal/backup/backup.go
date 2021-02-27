@@ -97,9 +97,10 @@ func newExecutorFromConfig(bc config.Backup, env Env) exec.Executor {
 	var cmds []exec.Cmd
 	for _, c := range bc.Commands {
 		cmds = append(cmds, exec.Cmd{
-			Exe:  c.Cmd,
-			Args: c.Args,
-			Env:  c.Env,
+			Cmd:     c.Cmd,
+			Args:    c.Args,
+			Env:     c.Env,
+			Workdir: c.Workdir,
 		})
 	}
 
@@ -116,11 +117,11 @@ func newExecutorFromConfig(bc config.Backup, env Env) exec.Executor {
 type dryRunner struct{}
 
 // Run runs a command as a subprocess.
-func (dryRunner) Run(ctx context.Context, cmd string, env map[string]string, args []string) error {
+func (dryRunner) Run(ctx context.Context, cmd exec.Cmd) error {
 	log.Info().
-		Str("cmd", cmd).
-		Str("args", fmt.Sprintf("%v", args)).
-		Str("env", fmt.Sprintf("%v", env)).
+		Str("cmd", cmd.Cmd).
+		Str("args", fmt.Sprintf("%v", cmd.Args)).
+		Str("env", fmt.Sprintf("%v", cmd.Env)).
 		Msg("Would have run the command")
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/google/go-jsonnet"
@@ -13,6 +14,12 @@ import (
 
 // Version is the latest version of the config format.
 const Version = "v1alpha1"
+
+// Default environment vars to pass on as `std.extVars` to the config.
+var defaultEnv = []string{
+	"HOME",
+	"USER",
+}
 
 // Config is the configuration format.
 type Config struct {
@@ -40,6 +47,9 @@ type Command struct {
 	Args []string `json:"args"`
 	// Env is a map of environment variables with their value.
 	Env map[string]string `json:"env"`
+	// Workdir specifies the working directory.
+	// Defaults to the current directory.
+	Workdir string
 }
 
 // Requirement is a backup requirement.
@@ -53,6 +63,9 @@ type Requirement struct {
 func Parse(path string) (Config, error) {
 	var cfg Config
 	vm := jsonnet.MakeVM()
+	for _, v := range defaultEnv {
+		vm.ExtVar(v, os.Getenv(v))
+	}
 	js, err := vm.EvaluateFile(path)
 	if err != nil {
 		return cfg, fmt.Errorf("evaluate jsonnet: %w", err)
