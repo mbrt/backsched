@@ -3,7 +3,6 @@ package backup
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/jonboulle/clockwork"
 	"github.com/rs/zerolog/log"
@@ -12,28 +11,6 @@ import (
 	"github.com/mbrt/backsched/internal/config"
 	"github.com/mbrt/backsched/internal/exec"
 )
-
-// ComputeOutdated returns the list of outdated backups.
-func ComputeOutdated(ctx context.Context, cfg config.Config, env Env) ([]Info, error) {
-	var res []Info
-	state := loadState(env.Sio)
-
-	for _, bc := range cfg.Backups {
-		clog := log.With().Str("backup", bc.Name).Logger()
-		t, ok := state.LastBackupOf(bc.Name)
-		since := env.Clock.Now().Sub(t)
-		if ok && since < time.Duration(bc.Interval) {
-			clog.Info().Msgf("Skipping because last backup was at: %v", t)
-			continue
-		}
-		res = append(res, Info{
-			Since:  since,
-			Backup: bc,
-		})
-	}
-
-	return res, nil
-}
 
 // Run runs the given backup configuration.
 func Run(ctx context.Context, cfg config.Config, env Env, dry bool) error {
@@ -84,34 +61,6 @@ type Env struct {
 type StateIOer interface {
 	Save(buf []byte) error
 	Load() ([]byte, error)
-}
-
-// Info represents the state of a backup.
-type Info struct {
-	// Since contains how long ago the backup was performed.
-	// Zero is a special value meaning "never".
-	Since  time.Duration
-	Backup config.Backup
-}
-
-func (i Info) String() string {
-	if i.Since == 0 {
-		return fmt.Sprintf("%s: never done before", i.Backup.Name)
-	}
-	return fmt.Sprintf("%s: %s ago", i.Backup.Name, fmtDuration(i.Since))
-}
-
-func fmtDuration(d time.Duration) string {
-	if d < time.Minute {
-		return "less than a minute"
-	}
-	if d < time.Hour {
-		return d.Truncate(time.Minute).String()
-	}
-	if d < time.Hour*24 {
-		return d.Truncate(time.Hour).String()
-	}
-	return fmt.Sprintf("%d days", int(d/time.Hour/24))
 }
 
 func loadState(sio StateIOer) config.State {
@@ -172,6 +121,6 @@ func (dryRunner) Run(ctx context.Context, cmd string, env map[string]string, arg
 		Str("cmd", cmd).
 		Str("args", fmt.Sprintf("%v", args)).
 		Str("env", fmt.Sprintf("%v", env)).
-		Msg("Would have run a command")
+		Msg("Would have run the command")
 	return nil
 }

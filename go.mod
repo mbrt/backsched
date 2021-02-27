@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815
-	github.com/gen2brain/dlgs v0.0.0-20210222160047-2f436553172f
+	github.com/gen2brain/beeep v0.0.0-20200526185328-e9c15c258e28
 	github.com/google/go-jsonnet v0.17.0
 	github.com/howeyc/gopass v0.0.0-20190910152052-7cb4b85ec19c
 	github.com/jonboulle/clockwork v0.2.2
