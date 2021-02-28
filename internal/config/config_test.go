@@ -65,3 +65,13 @@ func TestParse(t *testing.T) {
 		})
 	}
 }
+
+func TestParseErr(t *testing.T) {
+	tpaths := paths(t, "testfiles/err-*.jsonnet")
+	for _, tp := range tpaths {
+		t.Run(tp, func(t *testing.T) {
+			_, err := config.Parse(tp)
+			assert.NotNil(t, err)
+		})
+	}
+}

@@ -71,7 +71,10 @@ func Parse(path string) (Config, error) {
 		return cfg, fmt.Errorf("evaluate jsonnet: %w", err)
 	}
 	err = jsonUnmarshalStrict([]byte(js), &cfg)
-	return cfg, err
+	if err != nil {
+		return cfg, fmt.Errorf("json unmarshal: %w", err)
+	}
+	return cfg, checkConfig(cfg)
 }
 
 // Duration is a wrapper arond duration.
@@ -105,6 +108,21 @@ func (d *Duration) UnmarshalJSON(b []byte) error {
 	default:
 		return errors.New("invalid duration")
 	}
+}
+
+func checkConfig(cfg Config) error {
+	if cfg.Version != Version {
+		return fmt.Errorf("unknown version %q, expected %q", cfg.Version, Version)
+	}
+	// Check that there are no duplicate names.
+	names := map[string]bool{}
+	for _, b := range cfg.Backups {
+		if names[b.Name] {
+			return fmt.Errorf("backup names have to be unique, %q is duplicate", b.Name)
+		}
+		names[b.Name] = true
+	}
+	return nil
 }
 
 func jsonUnmarshalStrict(buf []byte, v interface{}) error {
