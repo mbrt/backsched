@@ -5,7 +5,7 @@ set -o pipefail
 
 bindir=~/bin
 unitdir=~/.config/systemd/user
-configdir=~/.backsched
+configdir=~/.config/mbrt/backsched
 
 # build and install the binary
 go build ./cmd/backsched
@@ -15,6 +15,8 @@ rm backsched
 
 # install the config dir
 install -d "${configdir}"
+install -T -m 600 config-default.jsonnet "${configdir}/config.jsonnet"
+install -T -m 600 backsched.libsonnet "${configdir}/backsched.libsonnet"
 
 # install the service file
 install -d "${unitdir}"

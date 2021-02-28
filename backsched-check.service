@@ -1,6 +1,6 @@
 [Unit]
-Description=Check backup needed
+Description=Check whether a backup needs to be performed.
 
 [Service]
 Type=oneshot
-ExecStart=%h/bin/backsched need-backup --notify-send
+ExecStart=%h/bin/backsched check --notify
