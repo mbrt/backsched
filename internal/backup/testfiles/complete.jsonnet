@@ -16,7 +16,7 @@ local backupcmd(name) = [
 ];
 
 {
-  version: 'v1',
+  version: 'v1alpha1',
   backups: [
     {
       name: 'weekly',

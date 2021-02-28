@@ -73,7 +73,7 @@ func checkFile(t *testing.T, fs afero.Fs, path string, expected []byte) {
 	assert.Equal(t, expected, got)
 }
 
-func TestBackup(t *testing.T) {
+func TestComplete(t *testing.T) {
 	// Load test files.
 	weekly := [][]byte{
 		loadTestFile(t, "testfiles/run_weekly_0.json"),
@@ -87,6 +87,7 @@ func TestBackup(t *testing.T) {
 	require.Nil(t, err)
 
 	// Set up fake environment.
+	ctx := context.Background()
 	clock := clockwork.NewFakeClock()
 	fs := afero.NewMemMapFs()
 	runner := testRunner{fs, 0}
@@ -99,17 +100,24 @@ func TestBackup(t *testing.T) {
 	}
 
 	// Run without requirements. Nothing should execute.
-	err = backup.Run(context.Background(), cfg, env, false)
+	err = backup.Run(ctx, cfg, env, false)
 	require.Nil(t, err)
 	ok, _ := afero.Exists(fs, "/run/0")
 	assert.Equal(t, false, ok)
+	// Everything is outdated.
+	od, err := backup.ComputeOutdated(ctx, cfg, env)
+	assert.Nil(t, err)
+	assert.Equal(t, []backup.Info{
+		{Since: 0, Backup: cfg.Backups[0]},
+		{Since: 0, Backup: cfg.Backups[1]},
+	}, od)
 
 	// Add the required paths for hourly only.
 	err = fs.MkdirAll("/mnt/backup/dir2", 0x700)
 	require.Nil(t, err)
 
 	// Run the backup: only hourly should be executed.
-	err = backup.Run(context.Background(), cfg, env, false)
+	err = backup.Run(ctx, cfg, env, false)
 	require.Nil(t, err)
 	// Check the commands that ran.
 	checkFile(t, fs, "/run/1", hourly[0])
@@ -117,12 +125,19 @@ func TestBackup(t *testing.T) {
 	// Weekly shouldn't have ran.
 	ok, _ = afero.Exists(fs, "/run/3")
 	assert.Equal(t, false, ok)
+	// Only weekly is now outdated.
+	od, err = backup.ComputeOutdated(ctx, cfg, env)
+	assert.Nil(t, err)
+	assert.Equal(t, []backup.Info{
+		{Since: 0, Backup: cfg.Backups[0]},
+	}, od)
 
 	// Create all required paths, but run too early for hourly.
 	clock.Advance(30 * time.Minute)
 	err = fs.MkdirAll("/mnt/backup/dir1", 0x700)
 	require.Nil(t, err)
-	err = backup.Run(context.Background(), cfg, env, false)
+	// Run the backup.
+	err = backup.Run(ctx, cfg, env, false)
 	require.Nil(t, err)
 	// Check the commands that ran.
 	checkFile(t, fs, "/run/3", weekly[0])
@@ -130,10 +145,21 @@ func TestBackup(t *testing.T) {
 	// Hourly shouldn't have ran.
 	ok, _ = afero.Exists(fs, "/run/5")
 	assert.Equal(t, false, ok)
+	// Nothing is outdated.
+	od, err = backup.ComputeOutdated(ctx, cfg, env)
+	assert.Nil(t, err)
+	assert.Equal(t, []backup.Info(nil), od)
 
 	// Wait more, now hourly can run but weekly can't.
 	clock.Advance(45 * time.Minute)
-	err = backup.Run(context.Background(), cfg, env, false)
+	// Hourly is outdated.
+	od, err = backup.ComputeOutdated(ctx, cfg, env)
+	assert.Nil(t, err)
+	assert.Equal(t, []backup.Info{
+		{Since: 75 * time.Minute, Backup: cfg.Backups[1]},
+	}, od)
+	// Run the backup.
+	err = backup.Run(ctx, cfg, env, false)
 	require.Nil(t, err)
 	// Check the commands that ran.
 	checkFile(t, fs, "/run/5", hourly[0])
@@ -144,7 +170,21 @@ func TestBackup(t *testing.T) {
 
 	// Now wait a week. Everything should be ready to run.
 	clock.Advance(8 * 24 * time.Hour)
-	err = backup.Run(context.Background(), cfg, env, false)
+	// Everything is outdated.
+	od, err = backup.ComputeOutdated(ctx, cfg, env)
+	assert.Nil(t, err)
+	assert.Equal(t, []backup.Info{
+		{
+			Since:  8*24*time.Hour + 45*time.Minute,
+			Backup: cfg.Backups[0],
+		},
+		{
+			Since:  8 * 24 * time.Hour,
+			Backup: cfg.Backups[1],
+		},
+	}, od)
+	// Run the backup.
+	err = backup.Run(ctx, cfg, env, false)
 	require.Nil(t, err)
 	// Check the commands that ran.
 	checkFile(t, fs, "/run/7", weekly[0])

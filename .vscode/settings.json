@@ -1,5 +1,6 @@
 {
     "jsonnet.extStrs": {
-        "HOME": "/home/foo"
+        "HOME": "/home/me",
+        "USER": "me"
     }
 }

@@ -1,7 +1,7 @@
 local days(x) = (24 * x) + 'h';
 
 {
-  version: 'v1',
+  version: 'v1alpha1',
   backups: [
     {
       name: 'foo',

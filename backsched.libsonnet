@@ -12,6 +12,7 @@ local hasFields(o, fs) =
   // env contains some environment variables prefilled by backsched.
   env: {
     HOME: std.extVar('HOME'),
+    USER: std.extVar('USER'),
   },
 
   // rsync.
