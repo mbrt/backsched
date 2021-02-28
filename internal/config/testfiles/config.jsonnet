@@ -33,12 +33,25 @@ local days(x) = (24 * x) + 'h';
         src='/home/me',
         dest='gs:personal:/',
         subdirs=['docs', 'pics'],
-        keep_last=10,
+        keepLast=10,
         gcloud={
-          project_id: 'backup-123456',
-          creds_path: lib.env.HOME + '/key.json',
+          projectId: 'backup-123456',
+          credsPath: lib.env.HOME + '/key.json',
         },
       ),
+    },
+    {
+      name: 'restic-local',
+      interval: days(3),
+      commands: lib.restic(
+        src='/home/me',
+        dest='/mnt/backup/restic',
+        subdirs=['.'],
+        keepLast=20,
+      ),
+      requires: [{
+        path: '/mnt/backup/full',
+      }],
     },
   ],
 }

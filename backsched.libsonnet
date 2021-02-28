@@ -1,12 +1,17 @@
 // backsched standard library.
 
 local ensureDir(p) = if std.endsWith(p, '/') then p else p + '/';
+
 local joinPath(p, q) = ensureDir(p) + q;
+
+local hasFields(o, fs) =
+  std.foldl(function(prev, y) prev && std.objectHas(o, y), fs, true);
 
 
 {
+  // env contains some environment variables prefilled by backsched.
   env: {
-      HOME: std.extVar('HOME'),
+    HOME: std.extVar('HOME'),
   },
 
   // rsync.
@@ -42,11 +47,19 @@ local joinPath(p, q) = ensureDir(p) + q;
       for p in subdirs
     ]),
 
-  restic(src, dest, subdirs, keep_last=null, gcloud=null)::
+  // restic.
+  //
+  // Use restic to backup a source with its subdirs into a local destination or
+  // to a GCS bucket. If keepLast is given, it specifies the maximum number of
+  // snapshots to keep.
+  restic(src, dest, subdirs, keepLast=null, gcloud=null)::
+    // Check that gcloud has the required args.
+    assert gcloud == null || hasFields(gcloud, ['projectId', 'credsPath']):
+      'parameters `projectId` and `credsPath` are required if `gcloud` is not null';
     local env = {
       HOME: $.env.HOME,
-      GOOGLE_PROJECT_ID: if gcloud != null then gcloud.project_id else null,
-      GOOGLE_APPLICATION_CREDENTIALS: if gcloud != null then gcloud.creds_path else null,
+      [if gcloud != null then 'GOOGLE_PROJECT_ID']: gcloud.projectId,
+      [if gcloud != null then 'GOOGLE_APPLICATION_CREDENTIALS']: gcloud.credsPath,
     };
     local run(args) = {
       cmd: 'restic',
@@ -58,12 +71,12 @@ local joinPath(p, q) = ensureDir(p) + q;
     [
       run(['backup'] + subdirs),
       run(['check']),
-    ] + if keep_last == null then []
+    ] + if keepLast == null then []
     else [
       run([
         'forget',
         '--keep-last',
-        std.toString(keep_last),
+        std.toString(keepLast),
         '--prune',
       ]),
     ],
