@@ -1,0 +1,199 @@
+{
+  "version": "v1alpha1",
+  "backups": [
+    {
+      "name": "rsync-some",
+      "commands": [
+        {
+          "cmd": "mkdir",
+          "args": [
+            "--mode=700",
+            "-p",
+            "/mnt/backup/imp/docs"
+          ]
+        },
+        {
+          "cmd": "rsync",
+          "args": [
+            "-av",
+            "--delete",
+            "/home/me/docs/",
+            "/mnt/backup/imp/docs/"
+          ]
+        },
+        {
+          "cmd": "mkdir",
+          "args": [
+            "--mode=700",
+            "-p",
+            "/mnt/backup/imp/pics"
+          ]
+        },
+        {
+          "cmd": "rsync",
+          "args": [
+            "-av",
+            "--delete",
+            "/home/me/pics/",
+            "/mnt/backup/imp/pics/"
+          ]
+        },
+        {
+          "cmd": "mkdir",
+          "args": [
+            "--mode=700",
+            "-p",
+            "/mnt/backup/imp/vids"
+          ]
+        },
+        {
+          "cmd": "rsync",
+          "args": [
+            "-av",
+            "--delete",
+            "/home/me/vids/",
+            "/mnt/backup/imp/vids/"
+          ]
+        }
+      ],
+      "requires": [
+        {
+          "path": "/mnt/backup/imp"
+        }
+      ],
+      "interval": "1h0m0s"
+    },
+    {
+      "name": "rsync-all",
+      "commands": [
+        {
+          "cmd": "mkdir",
+          "args": [
+            "--mode=700",
+            "-p",
+            "/mnt/backup/full"
+          ]
+        },
+        {
+          "cmd": "rsync",
+          "args": [
+            "-av",
+            "--delete",
+            "/home/me/",
+            "/mnt/backup/full/"
+          ]
+        }
+      ],
+      "requires": [
+        {
+          "path": "/mnt/backup/full"
+        }
+      ],
+      "interval": "168h0m0s"
+    },
+    {
+      "name": "restic-some",
+      "commands": [
+        {
+          "cmd": "restic",
+          "args": [
+            "-r",
+            "gs:personal:/",
+            "backup",
+            "docs",
+            "pics"
+          ],
+          "env": {
+            "GOOGLE_APPLICATION_CREDENTIALS": "/home/michele/key.json",
+            "GOOGLE_PROJECT_ID": "backup-123456",
+            "HOME": "/home/michele"
+          },
+          "workdir": "/home/me"
+        },
+        {
+          "cmd": "restic",
+          "args": [
+            "-r",
+            "gs:personal:/",
+            "check"
+          ],
+          "env": {
+            "GOOGLE_APPLICATION_CREDENTIALS": "/home/michele/key.json",
+            "GOOGLE_PROJECT_ID": "backup-123456",
+            "HOME": "/home/michele"
+          },
+          "workdir": "/home/me"
+        },
+        {
+          "cmd": "restic",
+          "args": [
+            "-r",
+            "gs:personal:/",
+            "forget",
+            "--keep-last",
+            "10",
+            "--prune"
+          ],
+          "env": {
+            "GOOGLE_APPLICATION_CREDENTIALS": "/home/michele/key.json",
+            "GOOGLE_PROJECT_ID": "backup-123456",
+            "HOME": "/home/michele"
+          },
+          "workdir": "/home/me"
+        }
+      ],
+      "interval": "168h0m0s"
+    },
+    {
+      "name": "restic-local",
+      "commands": [
+        {
+          "cmd": "restic",
+          "args": [
+            "-r",
+            "/mnt/backup/restic",
+            "backup",
+            "."
+          ],
+          "env": {
+            "HOME": "/home/michele"
+          },
+          "workdir": "/home/me"
+        },
+        {
+          "cmd": "restic",
+          "args": [
+            "-r",
+            "/mnt/backup/restic",
+            "check"
+          ],
+          "env": {
+            "HOME": "/home/michele"
+          },
+          "workdir": "/home/me"
+        },
+        {
+          "cmd": "restic",
+          "args": [
+            "-r",
+            "/mnt/backup/restic",
+            "forget",
+            "--keep-last",
+            "20",
+            "--prune"
+          ],
+          "env": {
+            "HOME": "/home/michele"
+          },
+          "workdir": "/home/me"
+        }
+      ],
+      "requires": [
+        {
+          "path": "/mnt/backup/full"
+        }
+      ],
+      "interval": "72h0m0s"
+    }
+  ]
+}

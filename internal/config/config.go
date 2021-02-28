@@ -34,7 +34,7 @@ type Backup struct {
 	// Commands is a list of commands to execute in order.
 	Commands []Command `json:"commands"`
 	// Requires is an optional list of requirements.
-	Requires []Requirement `json:"requires"`
+	Requires []Requirement `json:"requires,omitempty"`
 	// Interval is the time interval between backups.
 	Interval Duration `json:"interval"`
 }
@@ -46,17 +46,17 @@ type Command struct {
 	// Args is the list of arguments to pass
 	Args []string `json:"args"`
 	// Env is a map of environment variables with their value.
-	Env map[string]string `json:"env"`
+	Env map[string]string `json:"env,omitempty"`
 	// Workdir specifies the working directory.
 	// Defaults to the current directory.
-	Workdir string
+	Workdir string `json:"workdir,omitempty"`
 }
 
 // Requirement is a backup requirement.
 type Requirement struct {
 	// Path is a path in the filesystem that must be present in order for the
 	// backup to proceed.
-	Path *string `json:"path"`
+	Path *string `json:"path,omitempty"`
 }
 
 // Parse takes a file path and returns a parsed config.
