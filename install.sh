@@ -15,7 +15,9 @@ rm backsched
 
 # install the config dir
 install -d "${configdir}"
-install -T -m 600 config-default.jsonnet "${configdir}/config.jsonnet"
+if [ ! -f "${configdir}/config.jsonnet" ]; then
+    install -T -m 600 config-default.jsonnet "${configdir}/config.jsonnet"
+fi
 install -T -m 600 backsched.libsonnet "${configdir}/backsched.libsonnet"
 
 # install the service file

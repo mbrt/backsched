@@ -89,6 +89,7 @@ type DefaultRunner struct{}
 func (DefaultRunner) Run(ctx context.Context, cmd Cmd) error {
 	sp := exec.CommandContext(ctx, cmd.Cmd, cmd.Args...)
 	sp.Env = toOSEnv(cmd.Env)
+	sp.Stdin = os.Stdin
 	sp.Stdout = os.Stdout
 	sp.Stderr = os.Stderr
 	if cmd.Workdir != "" {
