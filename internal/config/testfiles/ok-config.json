@@ -108,6 +108,11 @@
             "GOOGLE_PROJECT_ID": "backup-123456",
             "HOME": "/home/michele"
           },
+          "secretEnv": {
+            "RESTIC_PASSWORD": {
+              "id": "password"
+            }
+          },
           "workdir": "/home/me"
         },
         {
@@ -121,6 +126,11 @@
             "GOOGLE_APPLICATION_CREDENTIALS": "/home/michele/key.json",
             "GOOGLE_PROJECT_ID": "backup-123456",
             "HOME": "/home/michele"
+          },
+          "secretEnv": {
+            "RESTIC_PASSWORD": {
+              "id": "password"
+            }
           },
           "workdir": "/home/me"
         },
@@ -138,6 +148,11 @@
             "GOOGLE_APPLICATION_CREDENTIALS": "/home/michele/key.json",
             "GOOGLE_PROJECT_ID": "backup-123456",
             "HOME": "/home/michele"
+          },
+          "secretEnv": {
+            "RESTIC_PASSWORD": {
+              "id": "password"
+            }
           },
           "workdir": "/home/me"
         }
@@ -158,6 +173,11 @@
           "env": {
             "HOME": "/home/michele"
           },
+          "secretEnv": {
+            "RESTIC_PASSWORD": {
+              "id": "password"
+            }
+          },
           "workdir": "/home/me"
         },
         {
@@ -169,6 +189,11 @@
           ],
           "env": {
             "HOME": "/home/michele"
+          },
+          "secretEnv": {
+            "RESTIC_PASSWORD": {
+              "id": "password"
+            }
           },
           "workdir": "/home/me"
         },
@@ -184,6 +209,11 @@
           ],
           "env": {
             "HOME": "/home/michele"
+          },
+          "secretEnv": {
+            "RESTIC_PASSWORD": {
+              "id": "password"
+            }
           },
           "workdir": "/home/me"
         }

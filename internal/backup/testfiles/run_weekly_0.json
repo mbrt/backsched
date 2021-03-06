@@ -7,5 +7,6 @@
         "start",
         "weekly"
     ],
-    "Workdir": "/home"
+    "Workdir": "/home",
+    "SecretEnv": {}
 }

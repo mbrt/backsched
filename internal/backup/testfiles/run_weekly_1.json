@@ -5,5 +5,8 @@
         "stop",
         "weekly"
     ],
-    "Workdir": ""
+    "Workdir": "",
+    "SecretEnv": {
+        "env2": "weekly-secret2-val"
+    }
 }

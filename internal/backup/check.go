@@ -20,7 +20,7 @@ func ComputeOutdated(ctx context.Context, cfg config.Config, env Env) ([]Info, e
 		t, ok := state.LastBackupOf(bc.Name)
 		since := env.Clock.Now().Sub(t)
 		if ok && since < time.Duration(bc.Interval) {
-			clog.Info().Msgf("Skipping because last backup was %s ago", fmtDuration(since))
+			clog.Info().Msgf("Skipping because: last backup was %s ago", fmtDuration(since))
 			continue
 		}
 		if !ok {

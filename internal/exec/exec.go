@@ -26,6 +26,9 @@ type Cmd struct {
 	Args []string
 	// Workdir is the working directory.
 	Workdir string
+	// SecretEnv contains environment variables and their value, but makes sure
+	// to not log or print their value, to avoid secrets leaking.
+	SecretEnv map[string]string
 }
 
 // Requirement is a requirement to satisfy.
@@ -88,7 +91,7 @@ type DefaultRunner struct{}
 // Run runs a command as a subprocess.
 func (DefaultRunner) Run(ctx context.Context, cmd Cmd) error {
 	sp := exec.CommandContext(ctx, cmd.Cmd, cmd.Args...)
-	sp.Env = toOSEnv(cmd.Env)
+	sp.Env = append(toOSEnv(cmd.Env), toOSEnv(cmd.SecretEnv)...)
 	sp.Stdin = os.Stdin
 	sp.Stdout = os.Stdout
 	sp.Stderr = os.Stderr

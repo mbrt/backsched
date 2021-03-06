@@ -5,5 +5,8 @@
         "stop",
         "hourly"
     ],
-    "Workdir": ""
+    "Workdir": "",
+    "SecretEnv": {
+        "env2": "hourly-secret2-val"
+    }
 }

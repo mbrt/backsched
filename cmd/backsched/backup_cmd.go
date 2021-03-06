@@ -11,7 +11,10 @@ import (
 	"github.com/mbrt/backsched/internal/config"
 )
 
-var dryRun bool
+var (
+	dryRun     bool
+	askSecrets bool
+)
 
 var backupCmd = &cobra.Command{
 	Use:   "backup",
@@ -27,6 +30,7 @@ func init() {
 	rootCmd.AddCommand(backupCmd)
 
 	backupCmd.Flags().BoolVarP(&dryRun, "dry-run", "", false, "only simulate the backup run.")
+	backupCmd.Flags().BoolVarP(&askSecrets, "ask-secrets", "", true, "whether to interactively ask secrets.")
 }
 
 func runBackup() error {
@@ -35,5 +39,8 @@ func runBackup() error {
 	if err != nil {
 		return fmt.Errorf("parsing config %q: %w", p, err)
 	}
-	return backup.Run(ctx, cfg, env(), dryRun)
+	return backup.Run(ctx, cfg, env(), backup.Opts{
+		DryRun:     dryRun,
+		AskSecrets: askSecrets,
+	})
 }

@@ -50,6 +50,11 @@ type Command struct {
 	// Workdir specifies the working directory.
 	// Defaults to the current directory.
 	Workdir string `json:"workdir,omitempty"`
+	// SecretEnv is a map from environment variables to identifiers, not
+	// stored in the config, but asked to the user at runtime.
+	// If the same identifier is used by multiple variables within a backup,
+	// the value will be asked only once and the value used multiple times.
+	SecretEnv map[string]Secret `json:"secretEnv,omitempty"`
 }
 
 // Requirement is a backup requirement.
@@ -57,6 +62,12 @@ type Requirement struct {
 	// Path is a path in the filesystem that must be present in order for the
 	// backup to proceed.
 	Path *string `json:"path,omitempty"`
+}
+
+// Secret represents a secret value, not stored in the config but identified
+// with a unique string and asked at runtime.
+type Secret struct {
+	ID string `json:"id"`
 }
 
 // Parse takes a file path and returns a parsed config.

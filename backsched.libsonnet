@@ -55,8 +55,8 @@ local hasFields(o, fs) =
   // snapshots to keep.
   restic(src, dest, subdirs, keepLast=null, gcloud=null)::
     // Check that gcloud has the required args.
-    assert gcloud == null || hasFields(gcloud, ['projectId', 'credsPath']):
-      'parameters `projectId` and `credsPath` are required if `gcloud` is not null';
+    assert gcloud == null || hasFields(gcloud, ['projectId', 'credsPath']) :
+           'parameters `projectId` and `credsPath` are required if `gcloud` is not null';
     local env = {
       HOME: $.env.HOME,
       [if gcloud != null then 'GOOGLE_PROJECT_ID']: gcloud.projectId,
@@ -66,6 +66,11 @@ local hasFields(o, fs) =
       cmd: 'restic',
       args: ['-r', dest] + args,
       env: env,
+      secretEnv: {
+        RESTIC_PASSWORD: {
+          id: 'password',
+        },
+      },
       workdir: src,
     };
 

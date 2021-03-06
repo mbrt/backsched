@@ -2,12 +2,16 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"path"
 
 	"github.com/jonboulle/clockwork"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
+	"golang.org/x/term"
 
 	"github.com/mbrt/backsched/internal/backup"
+	"github.com/mbrt/backsched/internal/config"
 	"github.com/mbrt/backsched/internal/exec"
 )
 
@@ -35,11 +39,25 @@ func (s stateIO) Load() ([]byte, error) {
 	return b, nil
 }
 
+type secrets struct{}
+
+func (secrets) Secret(backup string, s config.Secret) string {
+	b, err := term.ReadPassword(int(os.Stdin.Fd()))
+	if err != nil {
+		log.Fatal().
+			Err(err).
+			Str("backup", backup).
+			Msgf("Reading secret for ID=%s", s.ID)
+	}
+	return string(b)
+}
+
 func env() backup.Env {
 	return backup.Env{
-		Sio:    stateIO{},
-		Clock:  clockwork.NewRealClock(),
-		Fs:     afero.NewOsFs(),
-		Runner: exec.DefaultRunner{},
+		Sio:     stateIO{},
+		Clock:   clockwork.NewRealClock(),
+		Fs:      afero.NewOsFs(),
+		Runner:  exec.DefaultRunner{},
+		Secrets: secrets{},
 	}
 }

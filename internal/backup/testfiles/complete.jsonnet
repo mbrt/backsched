@@ -12,6 +12,11 @@ local backupcmd(name) = [
   {
     cmd: 'echo',
     args: ['stop', name],
+    secretEnv: {
+      env2: {
+        id: 'secret2',
+      },
+    },
   },
 ];
 
