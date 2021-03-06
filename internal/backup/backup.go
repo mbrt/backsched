@@ -108,8 +108,12 @@ func newExecutorFromConfig(bc config.Backup, env Env, opts Opts) exec.Executor {
 	}
 
 	secrets := map[string]string{}
-	if opts.AskSecrets && !opts.DryRun {
-		secrets = collectSecretVals(bc, env.Secrets)
+	if opts.AskSecrets {
+		if opts.DryRun {
+			secrets = collectSecretVals(bc, dryRunner{})
+		} else {
+			secrets = collectSecretVals(bc, env.Secrets)
+		}
 	}
 
 	var cmds []exec.Cmd
@@ -168,6 +172,10 @@ func (dryRunner) Run(ctx context.Context, cmd exec.Cmd) error {
 		Str("secrets", fmt.Sprintf("%v", keys(cmd.SecretEnv))).
 		Msg("Would have run the command")
 	return nil
+}
+
+func (dryRunner) Secret(string, config.Secret) string {
+	return ""
 }
 
 func keys(m map[string]string) []string {

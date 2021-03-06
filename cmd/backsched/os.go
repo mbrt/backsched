@@ -42,6 +42,7 @@ func (s stateIO) Load() ([]byte, error) {
 type secrets struct{}
 
 func (secrets) Secret(backup string, s config.Secret) string {
+	fmt.Printf("[backup %q %s]: ", backup, s.ID)
 	b, err := term.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
 		log.Fatal().
