@@ -45,18 +45,22 @@ func runCheck() error {
 	for _, b := range infos {
 		log.Info().Str("backup", b.Backup.Name).Msgf("Needs backup: %v", b)
 	}
-	if notify && len(infos) > 0 {
-		return report(infos)
+	if len(infos) > 0 {
+		summary := "The following backups are outdated:"
+		if notify {
+			return beeep.Notify(summary, report(infos), "")
+		}
+		fmt.Println(summary)
+		fmt.Println(report(infos))
 	}
 
 	return nil
 }
 
-func report(infos []backup.Info) error {
-	summary := "The following backups are outdated:"
+func report(infos []backup.Info) string {
 	var msg []string
 	for _, info := range infos {
 		msg = append(msg, fmt.Sprintf("  - %s\n", info))
 	}
-	return beeep.Notify(summary, strings.Join(msg, ""), "")
+	return strings.Join(msg, "")
 }
