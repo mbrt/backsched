@@ -75,7 +75,7 @@ local hasFields(o, fs) =
     };
 
     [
-      run(['backup'] + subdirs),
+      run(['backup', '--one-file-system'] + subdirs),
       run(['check']),
     ] + if keepLast == null then []
     else [
@@ -83,6 +83,7 @@ local hasFields(o, fs) =
         'forget',
         '--keep-last',
         std.toString(keepLast),
+        '--max-unused=1%',
         '--prune',
       ]),
     ],
