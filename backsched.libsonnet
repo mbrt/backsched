@@ -52,8 +52,10 @@ local hasFields(o, fs) =
   //
   // Use restic to backup a source with its subdirs into a local destination or
   // to a GCS bucket. If keepLast is given, it specifies the maximum number of
-  // snapshots to keep.
-  restic(src, dest, subdirs, keepLast=null, gcloud=null)::
+  // snapshots to keep. The exclude parameter is an optional list of patterns to
+  // exclude, tested against the full path of the files being backed up (see
+  // https://restic.readthedocs.io/en/stable/040_backup.html#excluding-files).
+  restic(src, dest, subdirs, keepLast=null, exclude=[], gcloud=null)::
     // Check that gcloud has the required args.
     assert gcloud == null || hasFields(gcloud, ['projectId', 'credsPath']) :
            'parameters `projectId` and `credsPath` are required if `gcloud` is not null';
@@ -73,9 +75,10 @@ local hasFields(o, fs) =
       },
       workdir: src,
     };
+    local excludesf = ['--exclude=' + x for x in exclude];
 
     [
-      run(['backup', '--one-file-system'] + subdirs),
+      run(['backup', '--one-file-system'] + excludesf + subdirs),
       run(['check']),
     ] + if keepLast == null then []
     else [
