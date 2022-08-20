@@ -90,4 +90,16 @@ local hasFields(o, fs) =
         '--prune',
       ]),
     ],
+  
+  // git fetch.
+  //
+  // Uses 'git fetch' on the given directories. This backs up remote
+  // repositories into local checkouts.
+  gitFetch(src, subdirs, branch='master')::
+    local run(dir) = {
+      cmd: 'git',
+      args: ['fetch', 'origin', branch],
+      workdir: joinPath(src, dir),
+    };
+    [run(d) for d in subdirs],
 }
