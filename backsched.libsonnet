@@ -102,4 +102,26 @@ local hasFields(o, fs) =
       workdir: joinPath(src, dir),
     };
     [run(d) for d in subdirs],
+  
+  // drive.
+  //
+  // Backs up Google Drive to a local directory, including exporting
+  // docs. This depends on github.com/odeke-em/drive being available
+  // and configured in 'dest'.
+  drive(dest, exportsDir)::
+    [
+      {
+        cmd: 'drive',
+        args: [
+          'pull',
+          '--no-prompt',
+          '--desktop-links=false',
+          '--fix-clashes',
+          '--same-exports-dir',
+          '--export=xlsx,docx,pptx',
+          '--exports-dir', exportsDir,
+        ],
+        workdir: dest,
+      },
+    ],
 }
